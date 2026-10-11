@@ -1,0 +1,1960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Space Race</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0B1033">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Luckiest+Guy&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --space: #0B1033; --space-2: #161B4A; --space-3: #232A66; --nebula: #6A4FC9; --nebula-2: #4A33A0; --nebula-3: #2D1E6B;
+            --card: #F5F3FF; --line: #2A2560; --ink-2: #16123A; --ink: #1A1840; --lav: #C9C3F5;
+            --rocket: #FF7A1A; --rocket-2: #D85E06; --rocket-3: #8A3A02; --amber: #FFC233; --ember: #C62828;
+            --teal: #2E9C8F; --teal-2: #1D6B62; --usa: #2763C9; --ussr: #C8261F;
+            --font-display: 'Luckiest Guy', 'Chalkboard SE', 'Comic Sans MS', sans-serif;
+            --font-body: 'Baloo 2', 'Chalkboard SE', 'Comic Sans MS', sans-serif;
+            --shadow: 0 6px 0 rgba(0, 0, 0, .35), 0 10px 22px rgba(0, 0, 0, .3);
+        }
+        * { box-sizing: border-box; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: var(--font-body); color: var(--ink); background-color: var(--space); background-image: var(--pattern, none), radial-gradient(ellipse at 20% 0%, #2A2470 0%, transparent 60%), radial-gradient(ellipse at 90% 60%, #3A1F5E 0%, transparent 55%); background-attachment: fixed; overflow-x: hidden; }
+        button { font-family: inherit; }
+
+        /* ---------- Header & nav ---------- */
+        .topbar { position: sticky; top: 0; z-index: 100; background: linear-gradient(180deg, #2B2470, #151A48); border-bottom: 6px solid var(--rocket); box-shadow: 0 4px 12px rgba(0,0,0,.4); padding: 8px 12px 10px; display: flex; align-items: center; justify-content: center; gap: 10px 16px; flex-wrap: wrap; }
+        .brand { font-family: var(--font-display); font-size: 28px; color: var(--amber); text-shadow: 3px 3px 0 var(--nebula-3); letter-spacing: 1px; white-space: nowrap; }
+        nav { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+        .nav-btn { font-weight: 800; font-size: 17px; background: var(--card); color: var(--ink-2); border: 3px solid var(--line); border-radius: 16px; padding: 4px 12px; box-shadow: 0 4px 0 #0A0826; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .nav-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #0A0826; }
+        .nav-btn.active { background: var(--rocket); color: #fff; border-color: var(--rocket-2); box-shadow: 0 4px 0 var(--rocket-3); }
+
+        main { position: relative; z-index: 1; padding: 12px 14px 150px; max-width: 1200px; margin: 0 auto; text-align: center; }
+        .screen { display: none; }
+        .screen.active { display: block; animation: screenIn .25s ease-out; }
+        @keyframes screenIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+        h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(30px, 5vw, 44px); color: var(--rocket); margin: 6px 0 2px; letter-spacing: 1px; text-shadow: 3px 3px 0 var(--nebula-3); }
+        .subtitle { font-size: 19px; font-weight: 700; color: var(--lav); margin: 0 0 12px; }
+        .landscape { position: fixed; left: 0; right: 0; bottom: 0; height: 160px; z-index: 0; pointer-events: none; opacity: .45; }
+        .landscape svg { width: 100%; height: 100%; display: block; }
+
+        /* ---------- Chips, search, buttons ---------- */
+        .chip-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 6px 0 10px; }
+        .chip { border: 3px solid var(--line); background: var(--card); border-radius: 999px; padding: 4px 12px; font-weight: 800; font-size: 16px; cursor: pointer; color: var(--ink-2); box-shadow: 0 3px 0 #0A0826; }
+        .chip:active { transform: translateY(2px); box-shadow: none; }
+        .chip.active { background: var(--nebula); color: #fff; border-color: var(--nebula-3); box-shadow: 0 3px 0 var(--nebula-3); }
+        .chip .count { opacity: .75; font-size: 14px; }
+        .search { font: inherit; font-size: 18px; font-weight: 700; padding: 8px 18px; border-radius: 999px; border: 3px solid var(--line); width: min(420px, 92%); background: var(--card); color: var(--ink); outline: none; user-select: text; -webkit-user-select: text; }
+        .search:focus { border-color: var(--rocket); }
+        .big-btn { background: var(--rocket); color: #fff; border: none; border-radius: 20px; padding: 12px 30px; font-size: 24px; font-weight: 800; cursor: pointer; box-shadow: 0 6px 0 var(--rocket-3); }
+        .big-btn:active { transform: translateY(5px); box-shadow: 0 1px 0 var(--rocket-3); }
+
+        /* ---------- Item cards ---------- */
+        .item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 16px; padding: 10px 2px; }
+        .item-card { --pc: var(--nebula); background: var(--card); border-radius: 20px; padding: 8px 8px 10px; border: 4px solid var(--pc); box-shadow: var(--shadow); cursor: pointer; transition: transform .12s; }
+        .item-card:hover { transform: translateY(-3px) rotate(-.6deg); }
+        .item-card:active { transform: scale(.96); }
+        .item-thumb { position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 4 / 3; background: #1B1F4B; }
+        .item-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .item-tag { position: absolute; left: 6px; top: 6px; background: var(--tc, var(--pc)); color: #fff; font-size: 12px; font-weight: 800; padding: 1px 8px; border-radius: 999px; border: 2px solid rgba(255,255,255,.85); text-shadow: 0 1px 1px rgba(0,0,0,.3); }
+        .item-card h3 { font-size: 18px; margin: 8px 0 0; line-height: 1.15; color: var(--ink-2); overflow-wrap: anywhere; }
+        .item-meta { font-size: 14px; font-weight: 700; color: var(--line); opacity: .85; }
+        .empty-note { font-size: 20px; font-weight: 700; color: var(--lav); grid-column: 1 / -1; }
+
+        /* ---------- Info panels (Solar System, Timeline) ---------- */
+        .panel-wrap { background: var(--space-2); border: 4px solid var(--space-3); border-radius: 24px; padding: 10px; box-shadow: var(--shadow); margin: 10px 0 16px; }
+        .info-panel { --pc: var(--nebula); display: grid; grid-template-columns: 1fr 1fr; gap: 12px; text-align: left; background: var(--card); border: 4px solid var(--pc); border-radius: 24px; padding: 16px; box-shadow: var(--shadow); margin-bottom: 14px; }
+        .ip-head { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .ip-head .ip-emoji { font-size: 54px; line-height: 1; }
+        .ip-head h2 { font-family: var(--font-display); font-weight: 400; color: var(--pc); font-size: clamp(26px, 4vw, 38px); margin: 0; letter-spacing: 1px; line-height: 1; }
+        .ip-head p { margin: 2px 0 0; font-weight: 800; color: var(--line); font-size: 17px; }
+        .ip-head .ip-btns { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+        .ip-box { background: #fff; border-radius: 16px; border: 3px solid color-mix(in srgb, var(--pc) 45%, white); padding: 8px 14px; }
+        .ip-box h4 { margin: 0; font-size: 18px; color: var(--pc); }
+        .ip-box p { margin: 2px 0 0; font-size: 17px; font-weight: 600; line-height: 1.35; }
+        .ip-fun { grid-column: 1 / -1; background: #FFF3C4; border-color: var(--amber); }
+        .section-title { font-family: var(--font-display); font-weight: 400; color: var(--amber); font-size: 26px; margin: 10px 0 0; letter-spacing: 1px; }
+
+        .speak-btn { background: var(--teal); color: #fff; border: none; border-radius: 999px; padding: 8px 16px; font-size: 18px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 0 var(--teal-2); white-space: nowrap; }
+        .speak-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--teal-2); }
+        .speak-btn.orange { background: var(--rocket); box-shadow: 0 4px 0 var(--rocket-3); }
+
+        /* ---------- Solar system ---------- */
+        #solar-svg { width: 100%; height: auto; display: block; border-radius: 16px; background: radial-gradient(ellipse at 0% 50%, #3A2A10 0%, #0A0D26 45%, #070A1E 100%); }
+        .planet-hit { cursor: pointer; }
+        .planet-label { font-family: var(--font-display); font-size: 17px; fill: #fff; letter-spacing: 1px; pointer-events: none; }
+        .planet-ring { fill: none; stroke: var(--amber); stroke-width: 3; opacity: 0; transition: opacity .2s; pointer-events: none; }
+        .planet-ring.on { opacity: 1; }
+        .solar-marker { transition: transform .9s cubic-bezier(.45, 1.5, .5, 1); pointer-events: none; }
+        .solar-marker .hop { animation: hop .5s ease-in-out infinite alternate; }
+        @keyframes hop { from { transform: translateY(0); } to { transform: translateY(-6px); } }
+        .calc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+        .calc { background: var(--card); border: 4px solid var(--rocket); border-radius: 24px; padding: 14px; box-shadow: var(--shadow); text-align: left; }
+        .calc h3 { font-family: var(--font-display); font-weight: 400; color: var(--rocket); font-size: 24px; margin: 0 0 6px; letter-spacing: 1px; }
+        .stepper { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; flex-wrap: wrap; }
+        .stepper button { width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--nebula); color: #fff; font-size: 28px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 0 var(--nebula-3); }
+        .stepper button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--nebula-3); }
+        .stepper output { min-width: 90px; text-align: center; font-size: 30px; color: var(--ink-2); }
+        .calc-results { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; margin-top: 10px; }
+        .calc-res { background: #fff; border-radius: 12px; border: 2px solid #DAD4F7; padding: 4px 8px; font-weight: 700; font-size: 15px; line-height: 1.2; }
+        .calc-res b { display: block; font-size: 20px; color: var(--nebula-2); }
+        .calc-note { font-size: 15px; font-weight: 700; color: var(--line); margin: 8px 0 0; }
+
+        /* ---------- Timeline ---------- */
+        .tl { display: flex; align-items: stretch; position: relative; padding-top: 44px; gap: 4px; }
+        .tl-seg { position: relative; flex: 1; border: none; cursor: pointer; color: #fff; min-height: 120px; padding: 10px 6px 14px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; box-shadow: inset 0 -8px 0 rgba(0,0,0,.25); transition: transform .15s, filter .15s; min-width: 0; }
+        .tl-seg:not(.selected) { filter: saturate(.7) brightness(.85); }
+        .tl-seg.selected { transform: translateY(-6px); outline: 4px solid var(--amber); outline-offset: 2px; }
+        .tl-emoji { font-size: clamp(24px, 3.5vw, 36px); line-height: 1.1; }
+        .tl-name { font-family: var(--font-display); font-size: clamp(13px, 2vw, 22px); letter-spacing: 1px; text-shadow: 2px 2px 0 rgba(0,0,0,.35); line-height: 1.1; }
+        .tl-years { font-size: clamp(11px, 1.4vw, 14px); font-weight: 700; line-height: 1.15; }
+        .tl-count { background: rgba(255,255,255,.92); color: var(--ink-2); border-radius: 999px; padding: 0 8px; font-size: 13px; font-weight: 800; margin-top: 4px; white-space: nowrap; }
+        .tl-marker { position: absolute; top: 0; font-size: 34px; transform: translateX(-50%); transition: left .9s cubic-bezier(.45, 1.5, .5, 1); pointer-events: none; }
+        .tl-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; justify-content: center; margin-top: 10px; font-weight: 800; font-size: 14px; color: var(--lav); }
+        .tl-legend span { display: inline-flex; align-items: center; gap: 4px; }
+        .tl-legend i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+        .event-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin-top: 10px; }
+        .event-card { --cc: var(--usa); display: flex; gap: 10px; align-items: center; background: var(--card); border-radius: 18px; border: 4px solid var(--cc); border-left-width: 14px; padding: 8px 10px; text-align: left; box-shadow: var(--shadow); }
+        .event-card.linked { cursor: pointer; }
+        .event-card.linked:active { transform: scale(.98); }
+        .event-card.flash { animation: flash 1.2s 2; }
+        @keyframes flash { 50% { box-shadow: 0 0 0 6px var(--amber); } }
+        .ev-year { font-family: var(--font-display); font-size: 26px; color: var(--cc); letter-spacing: 1px; min-width: 64px; text-align: center; line-height: 1; }
+        .ev-year small { display: block; font-family: var(--font-body); font-weight: 800; font-size: 13px; letter-spacing: 0; margin-top: 4px; }
+        .ev-text { flex: 1; font-weight: 700; font-size: 17px; line-height: 1.3; color: var(--ink-2); }
+        .ev-thumb { width: 84px; flex-shrink: 0; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: #1B1F4B; }
+        .ev-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        /* ---------- Science lab ---------- */
+        .lab-layout { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+        @media (min-width: 980px) { .lab-layout { flex-direction: row; align-items: flex-start; justify-content: center; } }
+        .lab-canvas { width: min(94vw, 700px); height: auto; border: 6px solid var(--space-3); border-radius: 18px; box-shadow: var(--shadow); background: #070A1E; display: block; }
+        .lab-text { background: var(--card); border: 4px solid var(--teal); border-radius: 24px; padding: 14px 18px; text-align: left; max-width: 440px; box-shadow: var(--shadow); }
+        .lab-text h2 { font-family: var(--font-display); font-weight: 400; color: var(--teal); font-size: 28px; margin: 0 0 6px; letter-spacing: 1px; }
+        .lab-text p { font-size: 18px; font-weight: 600; line-height: 1.4; margin: 0 0 10px; }
+
+        /* ---------- Credits ---------- */
+        .credits-intro { background: var(--card); border-radius: 20px; padding: 12px 18px; text-align: left; font-size: 17px; font-weight: 600; line-height: 1.45; box-shadow: var(--shadow); margin-bottom: 14px; }
+        .credits-intro a { color: var(--nebula-2); }
+        .credit-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; }
+        .credit-row { display: flex; gap: 10px; align-items: center; background: var(--card); border-radius: 14px; padding: 6px; text-align: left; font-size: 14px; font-weight: 600; line-height: 1.3; }
+        .credit-row img { width: 80px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+        .credit-row b { font-size: 16px; color: var(--ink-2); }
+        .credit-row a { color: var(--nebula-2); word-break: break-word; }
+
+        /* ---------- Modal ---------- */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(4, 4, 20, .82); z-index: 200; justify-content: center; align-items: center; padding: 16px; }
+        .modal.open { display: flex; animation: screenIn .2s ease-out; }
+        .modal-card { --pc: var(--nebula); background: var(--card); width: min(940px, 100%); max-height: 92vh; overflow-y: auto; border-radius: 28px; border: 6px solid var(--pc); padding: 20px; display: flex; gap: 20px; position: relative; text-align: left; }
+        .close-btn { position: absolute; top: 10px; right: 10px; z-index: 3; background: var(--ember); color: #fff; border: 3px solid #fff; width: 52px; height: 52px; border-radius: 50%; font-size: 24px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,.3); }
+        .modal-media { flex: 0 0 min(46%, 420px); min-width: 0; }
+        .modal-media img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 20px; display: block; border: 4px solid #fff; box-shadow: var(--shadow); }
+        .img-credit { font-size: 12px; font-weight: 700; color: #6B6790; margin: 6px 4px 0; line-height: 1.25; overflow-wrap: anywhere; }
+        .modal-body { flex: 1; min-width: 0; }
+        .modal-body h2 { font-family: var(--font-display); font-weight: 400; color: var(--rocket); font-size: clamp(26px, 4vw, 38px); margin: 0 0 6px; padding-right: 50px; line-height: 1.05; letter-spacing: 1px; overflow-wrap: anywhere; }
+        .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+        .info-chip { border-radius: 999px; padding: 2px 10px; font-weight: 800; font-size: 15px; background: #fff; border: 2px solid var(--line); color: var(--ink-2); }
+        .info-chip.group { background: var(--pc); color: #fff; border-color: transparent; }
+        .info-chip.country { background: var(--cc); color: #fff; border-color: transparent; }
+        .modal-desc { font-size: 22px; font-weight: 700; line-height: 1.35; margin: 4px 0 10px; }
+        .speech-bubble { position: relative; background: #fff; border: 3px solid var(--line); border-radius: 18px; padding: 8px 14px; font-size: 18px; font-weight: 700; margin: 8px 0 12px 12px; }
+        .speech-bubble::before { content: '🗣️'; position: absolute; left: -20px; top: -14px; font-size: 26px; }
+        .group-about { font-size: 16px; font-weight: 600; color: var(--line); margin: 0 0 12px; }
+        .modal-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+        /* ---------- Win overlay & toast ---------- */
+        #win-overlay { display: none; position: fixed; inset: 0; background: rgba(4, 4, 20, .82); z-index: 300; justify-content: center; align-items: center; padding: 16px; }
+        .win-box { background: var(--card); color: var(--ink-2); padding: 26px 30px; border-radius: 30px; text-align: center; border: 8px solid var(--amber); max-width: 520px; width: 100%; max-height: 94vh; overflow-y: auto; animation: popIn .35s cubic-bezier(.4, 1.6, .5, 1); }
+        .win-box h2 { font-family: var(--font-display); font-weight: 400; color: var(--rocket); font-size: 40px; margin: 0 0 10px; letter-spacing: 1px; }
+        .win-box p { font-size: 22px; font-weight: 700; margin: 0 0 18px; white-space: pre-line; }
+        .overlay-img { width: 240px; height: 180px; object-fit: cover; border-radius: 18px; border: 4px solid var(--nebula); margin-bottom: 12px; display: none; }
+        #toast { position: fixed; left: 50%; top: 110px; transform: translateX(-50%) translateY(-20px); background: var(--nebula-3); color: #fff; font-weight: 800; font-size: 20px; padding: 10px 20px; border-radius: 999px; z-index: 400; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; box-shadow: 0 6px 16px rgba(0,0,0,.4); max-width: 92vw; text-align: center; }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* ---------- Memory match ---------- */
+        .memory-grid { display: grid; gap: 12px; justify-content: center; grid-template-columns: repeat(4, minmax(64px, 160px)); perspective: 1000px; margin: 0 auto; }
+        .memory-grid.grid-16 { grid-template-columns: repeat(4, minmax(64px, 140px)); }
+        .memory-card { aspect-ratio: 1; position: relative; transform-style: preserve-3d; transition: transform .45s; cursor: pointer; }
+        .memory-card.flipped, .memory-card.matched { transform: rotateY(180deg); }
+        .memory-card.matched { animation: matchPop .5s .45s; }
+        @keyframes matchPop { 50% { transform: rotateY(180deg) scale(1.08); } }
+        .card-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); border: 4px solid var(--card); overflow: hidden; }
+        .card-front { background: radial-gradient(circle at 20% 25%, #fff 0 1.5%, transparent 2%), radial-gradient(circle at 75% 20%, #fff 0 1%, transparent 1.5%), radial-gradient(circle at 60% 80%, #fff 0 1.2%, transparent 1.7%), radial-gradient(circle at 30% 70%, rgba(255,255,255,.7) 0 1%, transparent 1.5%), linear-gradient(145deg, #4A33A0, #0B1033); font-size: clamp(34px, 6vw, 54px); }
+        .card-back { background: #fff; transform: rotateY(180deg); }
+        .card-back img { width: 100%; height: 100%; object-fit: cover; }
+        .memory-card.matched .card-back { border-color: var(--amber); }
+        .card-label { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(11, 16, 51, .78); color: #fff; font-size: 13px; font-weight: 800; padding: 2px 4px; text-align: center; line-height: 1.15; z-index: 2; overflow-wrap: anywhere; }
+        .moves { font-size: 20px; font-weight: 800; color: var(--lav); margin: 0 0 10px; }
+
+        /* ---------- Games ---------- */
+        .game-layout { display: flex; flex-direction: column; align-items: center; gap: 16px; margin-top: 6px; }
+        @media (min-width: 820px) { .game-layout { flex-direction: row; justify-content: center; align-items: center; } }
+        .game-canvas { border: 6px solid var(--space-3); border-radius: 18px; box-shadow: var(--shadow); background: #8A8698; display: block; touch-action: none; }
+        .maze-canvas { width: min(92vw, 54vh, 560px); height: auto; }
+        .dash-canvas { width: min(92vw, calc(min(56vh, 600px) * 2 / 3)); height: auto; background: #070A1E; }
+        .game-side { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+        .hud { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+        .hud span { background: var(--card); border: 3px solid var(--line); border-radius: 999px; padding: 2px 12px; font-weight: 800; font-size: 18px; }
+        .d-pad { display: grid; grid-template-columns: repeat(3, 76px); grid-template-rows: repeat(3, 76px); gap: 8px; }
+        .d-btn { background: var(--rocket); border: none; border-radius: 20px; color: #fff; font-size: 32px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 0 var(--rocket-3); width: 76px; height: 76px; touch-action: none; }
+        .d-btn:active, .d-btn.pressed { transform: translateY(5px); box-shadow: 0 1px 0 var(--rocket-3); }
+        .d-up { grid-column: 2; grid-row: 1; } .d-left { grid-column: 1; grid-row: 2; } .d-right { grid-column: 3; grid-row: 2; } .d-down { grid-column: 2; grid-row: 3; }
+        .d-mid { grid-column: 2; grid-row: 2; display: flex; align-items: center; justify-content: center; font-size: 34px; }
+        .dash-pad { display: flex; gap: 12px; align-items: center; }
+        .d-btn.jump { width: 110px; background: var(--nebula); box-shadow: 0 6px 0 var(--nebula-3); font-size: 22px; flex-direction: column; line-height: 1; }
+        .d-btn.jump:active, .d-btn.jump.pressed { box-shadow: 0 1px 0 var(--nebula-3); }
+        .how-to { background: var(--card); border: 3px dashed var(--line); border-radius: 16px; padding: 8px 14px; font-weight: 700; font-size: 16px; max-width: 320px; text-align: left; margin: 0; }
+        .how-to li { margin: 2px 0; }
+
+        /* ---------- Quiz & Who am I ---------- */
+        .quiz-container { display: flex; flex-direction: column; align-items: center; gap: 18px; max-width: 1000px; margin: 6px auto 0; }
+        .question-box { display: flex; align-items: center; justify-content: center; gap: 16px; background: var(--card); padding: 16px 20px; border-radius: 24px; border: 5px solid var(--amber); width: 100%; box-shadow: var(--shadow); }
+        .question-text { font-size: clamp(22px, 3.4vw, 30px); font-weight: 800; color: var(--ink-2); margin: 0; line-height: 1.25; flex: 1; }
+        .round-btn { background: var(--teal); color: #fff; border: none; border-radius: 50%; width: 58px; height: 58px; font-size: 28px; cursor: pointer; flex-shrink: 0; box-shadow: 0 4px 0 var(--teal-2); }
+        .round-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--teal-2); }
+        .progress { font-size: 26px; letter-spacing: 4px; }
+        .answers-grid { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+        .answer-card { position: relative; width: clamp(150px, 28vw, 240px); aspect-ratio: 4 / 3; border-radius: 22px; cursor: pointer; border: 6px solid var(--nebula); overflow: hidden; box-shadow: var(--shadow); transition: transform .15s; background: #fff; }
+        .answer-card:active { transform: scale(.95); }
+        .answer-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        #guess-answers { gap: 12px; }
+        #guess-answers .answer-card { width: clamp(130px, 17vw, 200px); }
+        .answer-card .card-label { font-size: 15px; padding: 3px 4px; }
+        .answer-card.correct::after, .answer-card.wrong::after { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; font-size: 70px; z-index: 5; animation: popIn .3s forwards; }
+        .answer-card.correct { border-color: var(--amber); }
+        .answer-card.correct::after { content: '✅'; background: rgba(255,255,255,.7); }
+        .answer-card.wrong::after { content: '❌'; background: rgba(255,255,255,.65); }
+        .fact-line { min-height: 30px; font-size: 19px; font-weight: 700; color: var(--amber); margin: 0; }
+        .guesses-left { font-size: 20px; font-weight: 800; color: var(--rocket-2); }
+        .clue-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .clue-item { position: relative; font-size: 20px; font-weight: 700; padding: 8px 14px 8px 46px; border-radius: 14px; background: #EEEAFF; border: 3px solid #C9BFF5; color: var(--ink); text-align: left; animation: screenIn .3s; }
+        .clue-item::before { content: attr(data-n); position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; border-radius: 50%; background: var(--rocket); color: #fff; font-size: 15px; display: flex; align-items: center; justify-content: center; }
+        .clue-item.locked { background: #E2E0EC; border-color: #CAC6DA; color: transparent; height: 46px; animation: none; }
+        .clue-item.locked::after { content: '🔒 Locked'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 17px; color: #7A7690; }
+
+        .shake { animation: shake .5s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-12px); } 50% { transform: translateX(12px); } 75% { transform: translateX(-12px); } }
+        @keyframes popIn { 0% { transform: scale(.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        @media (max-width: 700px) {
+            .brand { font-size: 22px; }
+            .nav-btn { font-size: 15px; padding: 3px 9px; }
+            .item-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+            .info-panel, .calc-row { grid-template-columns: 1fr; }
+            .tl-seg { min-height: 96px; }
+            .modal-card { flex-direction: column; padding: 14px; }
+            .modal-media { flex: none; width: 100%; }
+            .d-pad { grid-template-columns: repeat(3, 66px); grid-template-rows: repeat(3, 66px); }
+            .d-btn { width: 66px; height: 66px; }
+        }
+    </style>
+</head>
+<body>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(() => console.log('Service Worker Registered!'))
+                    .catch(() => console.log('Service Worker Failed!'));
+            });
+        }
+    </script>
+
+    <header class="topbar">
+        <div class="brand">🚀 Space Race</div>
+        <nav>
+            <button class="nav-btn active" data-screen="database">📚 Space-pedia</button>
+            <button class="nav-btn" data-screen="solar">🪐 Solar System</button>
+            <button class="nav-btn" data-screen="timeline">🏁 Timeline</button>
+            <button class="nav-btn" data-screen="lab">🔬 Science Lab</button>
+            <button class="nav-btn" data-screen="match">🃏 Match</button>
+            <button class="nav-btn" data-screen="maze">🌕 Rover</button>
+            <button class="nav-btn" data-screen="quiz">❓ Quiz</button>
+            <button class="nav-btn" data-screen="guess">🕵️ Who?</button>
+            <button class="nav-btn" data-screen="dash">☄️ Asteroid Dash</button>
+        </nav>
+    </header>
+
+    <div class="landscape" aria-hidden="true">
+        <svg viewBox="0 0 1200 160" preserveAspectRatio="xMidYMax slice">
+            <!-- Earth rising over the Moon -->
+            <circle cx="930" cy="70" r="34" fill="#4A8FE0"/>
+            <path d="M910 52 q14 -8 22 4 q-4 10 -16 8 z M934 78 q16 -6 22 6 q-10 10 -20 4 z" fill="#5FBF6A"/>
+            <path d="M930 36 a34 34 0 0 1 0 68 a24 34 0 0 0 0 -68" fill="#0B1033" opacity=".55"/>
+            <g fill="#9A96AA">
+                <path d="M0 160 V112 Q140 92 300 108 T620 100 T900 112 T1200 98 V160 Z"/>
+            </g>
+            <g fill="#7D7990">
+                <ellipse cx="180" cy="128" rx="46" ry="9"/><ellipse cx="520" cy="122" rx="30" ry="6"/><ellipse cx="760" cy="134" rx="60" ry="10"/><ellipse cx="1060" cy="124" rx="36" ry="7"/>
+            </g>
+            <!-- lunar lander -->
+            <g transform="translate(380 60)" fill="#C9C5D6">
+                <path d="M10 30 h40 l6 14 h-52 z" fill="#E6B84A"/>
+                <rect x="16" y="8" width="28" height="22" rx="4"/>
+                <path d="M6 44 l-10 18 M54 44 l10 18 M18 44 l-4 18 M42 44 l4 18" stroke="#C9C5D6" stroke-width="3"/>
+                <rect x="24" y="14" width="12" height="8" rx="2" fill="#0B1033"/>
+            </g>
+            <!-- flag -->
+            <path d="M470 102 V62" stroke="#C9C5D6" stroke-width="3"/><rect x="471" y="62" width="26" height="16" fill="#E8E4F4"/>
+        </svg>
+    </div>
+
+    <main>
+        <!-- SPACE-PEDIA -->
+        <section id="screen-database" class="screen active">
+            <h1>📚 Space-pedia</h1>
+            <p class="subtitle" id="db-subtitle">Tap a card to learn all about it!</p>
+            <input id="db-search" class="search" type="search" placeholder="🔍 Search space..." autocomplete="off">
+            <div class="chip-row" id="db-filters"></div>
+            <div class="item-grid" id="item-grid"></div>
+            <p style="margin-top:24px"><button class="chip" id="open-credits">📜 Picture credits</button></p>
+        </section>
+
+        <!-- SOLAR SYSTEM -->
+        <section id="screen-solar" class="screen">
+            <h1>🪐 The Solar System</h1>
+            <p class="subtitle">Tap the Sun or a planet to find out all about it!</p>
+            <div class="chip-row" id="solar-scale">
+                <button class="chip active" data-scale="easy">👀 Easy-to-see sizes</button>
+                <button class="chip" data-scale="real">📏 Real sizes</button>
+            </div>
+            <div class="panel-wrap">
+                <svg id="solar-svg" viewBox="0 0 1000 300" role="img" aria-label="The Sun and planets"></svg>
+                <div class="calc-note" id="solar-hint" style="color: var(--lav)"></div>
+            </div>
+            <div class="info-panel" id="planet-panel"></div>
+            <div class="calc-row">
+                <div class="calc">
+                    <h3>⚖️ Your Weight on Other Worlds</h3>
+                    <div class="stepper">Your weight: <button data-calc="w" data-step="-1">−</button><output id="calc-weight">25 kg</output><button data-calc="w" data-step="1">+</button></div>
+                    <div class="calc-results" id="weight-results"></div>
+                    <p class="calc-note">Gravity is the pull that keeps your feet on the ground. Big planets pull harder!</p>
+                </div>
+                <div class="calc">
+                    <h3>🎂 How Old Would You Be?</h3>
+                    <div class="stepper">Your age: <button data-calc="a" data-step="-1">−</button><output id="calc-age">6 years</output><button data-calc="a" data-step="1">+</button></div>
+                    <div class="calc-results" id="age-results"></div>
+                    <p class="calc-note">A year is one trip around the Sun. Faraway planets take much longer!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TIMELINE -->
+        <section id="screen-timeline" class="screen">
+            <h1>🏁 Space Race Timeline</h1>
+            <p class="subtitle">From the first satellite to the Moon and beyond! Tap a time to see what happened.</p>
+            <div class="panel-wrap">
+                <div class="tl" id="timeline"><div class="tl-marker" id="tl-marker">🚀</div></div>
+                <div class="tl-legend" id="tl-legend"></div>
+            </div>
+            <div class="info-panel" id="era-panel"></div>
+            <h2 class="section-title" id="era-events-title"></h2>
+            <div class="event-list" id="event-list"></div>
+        </section>
+
+        <!-- SCIENCE LAB -->
+        <section id="screen-lab" class="screen">
+            <h1>🔬 Science Lab</h1>
+            <p class="subtitle">How does space work? Pick an experiment and watch!</p>
+            <div class="chip-row" id="lab-tabs"></div>
+            <div class="lab-layout">
+                <canvas id="lab-canvas" class="lab-canvas" width="700" height="440"></canvas>
+                <div class="lab-text">
+                    <h2 id="lab-title"></h2>
+                    <div id="lab-body"></div>
+                    <button class="speak-btn" id="lab-speak">🔊 Read to me</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- MATCH -->
+        <section id="screen-match" class="screen">
+            <h1>🃏 Space Pairs</h1>
+            <div class="chip-row" id="match-diff">
+                <button class="chip active" data-cards="8">🌙 Easy (8)</button>
+                <button class="chip" data-cards="12">🪐 Medium (12)</button>
+                <button class="chip" data-cards="16">🌌 Hard (16)</button>
+            </div>
+            <p class="moves" id="match-moves">Moves: 0</p>
+            <div class="memory-grid" id="memory-grid"></div>
+        </section>
+
+        <!-- MAZE -->
+        <section id="screen-maze" class="screen">
+            <h1>🌕 Moon Rover Rescue</h1>
+            <p class="subtitle">Drive the rover to collect all the moon rocks, then take them back to the lander. Watch out for the dust storm!</p>
+            <div class="chip-row" id="maze-diff">
+                <button class="chip" data-diff="easy">🌙 Easy</button>
+                <button class="chip active" data-diff="medium">🚀 Medium</button>
+                <button class="chip" data-diff="hard">🌪️ Hard</button>
+            </div>
+            <div class="game-layout">
+                <canvas id="maze-canvas" class="game-canvas maze-canvas" width="560" height="560"></canvas>
+                <div class="game-side">
+                    <div class="hud">
+                        <span id="mz-level">Level 1</span><span id="mz-cubs">🪨 0/3</span><span id="mz-lives">❤️❤️❤️</span><span id="mz-time">⏱️ 0s</span>
+                    </div>
+                    <div class="d-pad">
+                        <button class="d-btn d-up" data-dir="0">⬆️</button>
+                        <button class="d-btn d-left" data-dir="3">⬅️</button>
+                        <div class="d-mid">🌕</div>
+                        <button class="d-btn d-right" data-dir="1">➡️</button>
+                        <button class="d-btn d-down" data-dir="2">⬇️</button>
+                    </div>
+                    <ul class="how-to">
+                        <li>👆 Swipe or tap the maze to drive</li>
+                        <li>🪨 Collect every moon rock sample</li>
+                        <li>🛸 Then drive back to the lander</li>
+                        <li>🌪️ Don't let the dust storm catch you!</li>
+                    </ul>
+                    <button class="big-btn" id="maze-new">🔄 New Maze</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- QUIZ -->
+        <section id="screen-quiz" class="screen">
+            <h1>❓ Space Quiz</h1>
+            <div class="quiz-container">
+                <div class="progress" id="quiz-progress"></div>
+                <div class="question-box">
+                    <button class="round-btn" id="quiz-speak" aria-label="Read the question">🔊</button>
+                    <p class="question-text" id="question-text"></p>
+                </div>
+                <div class="answers-grid" id="quiz-answers"></div>
+                <p class="fact-line" id="quiz-fact"></p>
+            </div>
+        </section>
+
+        <!-- WHO AM I -->
+        <section id="screen-guess" class="screen">
+            <h1>🕵️ Who Am I?</h1>
+            <div class="quiz-container">
+                <div class="question-box" style="flex-direction: column; align-items: stretch;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="guesses-left" id="guesses-display"></div>
+                        <button class="round-btn" id="guess-speak" aria-label="Read the clue">🔊</button>
+                    </div>
+                    <ul class="clue-list" id="clue-list"></ul>
+                </div>
+                <div class="answers-grid" id="guess-answers"></div>
+            </div>
+        </section>
+
+        <!-- ASTEROID DASH -->
+        <section id="screen-dash" class="screen">
+            <h1>☄️ Asteroid Dash</h1>
+            <p class="subtitle">Fly the rocket away from the hungry black hole!</p>
+            <div class="game-layout">
+                <canvas id="dash-canvas" class="game-canvas dash-canvas" width="400" height="600"></canvas>
+                <div class="game-side">
+                    <div class="dash-pad">
+                        <button class="d-btn" id="dash-left">⬅️</button>
+                        <button class="d-btn jump" id="dash-jump">🌀<span style="font-size:16px">WARP</span></button>
+                        <button class="d-btn" id="dash-right">➡️</button>
+                    </div>
+                    <ul class="how-to">
+                        <li>⬅️ ➡️ Change lanes (or swipe)</li>
+                        <li>🌀 Warp over asteroids, space junk and dust</li>
+                        <li>🔋 Every 3 fuel cells gives a TURBO boost</li>
+                        <li>⭐ Stars give you a force field</li>
+                        <li>🛸 Watch out for things flying across!</li>
+                    </ul>
+                    <button class="big-btn" id="dash-start">▶️ Blast Off</button>
+                    <p class="moves" id="dash-best"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CREDITS -->
+        <section id="screen-credits" class="screen">
+            <h1>📜 Picture Credits</h1>
+            <div class="credits-intro" id="credits-intro"></div>
+            <div class="credit-list" id="credit-list"></div>
+        </section>
+    </main>
+
+    <div class="modal" id="item-modal">
+        <div class="modal-card" id="modal-card">
+            <button class="close-btn" id="modal-close" aria-label="Close">✕</button>
+            <div class="modal-media"><div id="modal-media"></div><p class="img-credit" id="modal-credit"></p></div>
+            <div class="modal-body">
+                <h2 id="modal-title"></h2>
+                <div class="chips" id="modal-chips"></div>
+                <p class="modal-desc" id="modal-desc"></p>
+                <div class="speech-bubble" id="modal-speech"></div>
+                <p class="group-about" id="modal-group"></p>
+                <div class="modal-actions">
+                    <button class="speak-btn" id="modal-speak">🔊 Read to me</button>
+                    <button class="speak-btn orange" id="modal-goto"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="win-overlay">
+        <div class="win-box">
+            <h2 id="win-title">⭐ OUT OF THIS WORLD! ⭐</h2>
+            <img id="win-img" class="overlay-img" alt="">
+            <p id="win-message">You did it!</p>
+            <button class="big-btn" id="win-btn">Play Again</button>
+        </div>
+    </div>
+    <div id="toast"></div>
+
+    <script src="space.js"></script>
+    <script src="credits.js"></script>
+    <script>
+        // =====================================================================
+        //  DATA
+        // =====================================================================
+        const CREDITS = (typeof IMAGE_CREDITS !== 'undefined') ? IMAGE_CREDITS : {};
+        const listWords = arr => arr.length < 2 ? arr.join('') : arr.slice(0, -1).join(', ') + ' and ' + arr[arr.length - 1];
+        const toId = name => name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+
+        const items = SPACE_ROWS.map(([name, group, year, country, desc, factA, factB, bigClue, wiki]) =>
+            ({ id: toId(name), name, group, year, country, desc, facts: [factA, factB], bigClue, wiki }));
+        const itemById = Object.fromEntries(items.map(it => [it.id, it]));
+        const itemByName = Object.fromEntries(items.map(it => [it.name, it]));
+        const isDwarf = it => ['Pluto', 'Ceres'].includes(it.name);
+        const isPlanet = it => it.group === 'planet' && it.name !== 'Sun' && !isDwarf(it);
+        const isGalaxy = it => /Milky Way|Galaxy|Magellanic/.test(it.name);
+        items.forEach(it => { it.clues = buildClues(it); });
+
+        // Clue 1 comes from the year and country (or where it is), clue 2 from what kind of thing it is.
+        function buildClues(it) {
+            const c = SPACE_COUNTRIES[it.country];
+            const who = c ? c.name : '';
+            let first;
+            if (it.year && c) {
+                first = {
+                    robot: `I was launched by ${who} in ${it.year}.`,
+                    station: `I was launched in ${it.year} by ${who}.`,
+                    mission: `I flew in ${it.year}, for ${who}.`,
+                    craft: `I come from ${who}, and I first flew in ${it.year}.`,
+                    astronaut: `My big space adventure was in ${it.year}, for ${who}.`,
+                    scientist: `I was born in ${it.year}.`,
+                    future: `I am being planned by ${who}, for around ${it.year}.`
+                }[it.group];
+            } else {
+                first = { planet: 'I am part of our Solar System.', moon: 'I am part of our Solar System.',
+                          star: 'I am a star, far beyond our Solar System.', deep: 'I am very, very far away, outside our Solar System.' }[it.group];
+            }
+            let second;
+            switch (it.group) {
+                case 'planet': second = it.name === 'Sun' ? 'I am a star.' : isDwarf(it) ? 'I am a dwarf planet.' : 'I am a planet that goes around the Sun.'; break;
+                case 'moon': second = /Comet/.test(it.name) ? 'I am a comet.' : /Belt/.test(it.name) ? 'I am a giant belt of space rocks.' : 'I am a moon.'; break;
+                case 'star': second = 'I am a star, a giant ball of glowing gas.'; break;
+                case 'deep': second = isGalaxy(it) ? 'I am a galaxy, full of billions of stars.' : /Black Hole|Sagittarius/.test(it.name) ? 'I am a black hole.'
+                    : /Nebula|Pillars/.test(it.name) ? 'I am a giant cloud of gas and dust.' : 'I am about planets going around another star.'; break;
+                case 'robot': second = /Telescope/.test(it.name) ? 'I am a space telescope.' : 'I am a robot explorer, with no people on board.'; break;
+                case 'station': second = 'I am a space station where astronauts live.'; break;
+                case 'mission': second = 'I am a famous space mission.'; break;
+                case 'craft': second = 'I am a rocket or a spaceship.'; break;
+                case 'astronaut': second = it.name === 'Laika' ? 'I am an animal who went to space.' : `I am a space traveller from ${who}.`; break;
+                case 'scientist': second = 'I am a famous scientist or engineer who helped us understand space.'; break;
+                case 'future': second = "I am a space mission that hasn't happened yet."; break;
+            }
+            return [first, second, it.facts[0], it.facts[1], it.bigClue];
+        }
+
+        const shuffle = arr => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+        const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+        const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        function storageGet(key, fallback) { try { const v = localStorage.getItem(key); return v === null ? fallback : JSON.parse(v); } catch (e) { return fallback; } }
+        function storageSet(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* storage unavailable */ } }
+
+        // =====================================================================
+        //  IMAGES (real picture if it has a credit in credits.js, otherwise a drawn placeholder)
+        // =====================================================================
+        const placeholderCache = {};
+        function placeholderFor(it) {
+            if (placeholderCache[it.id]) return placeholderCache[it.id];
+            const g = SPACE_GROUPS[it.group];
+            const stars = Array.from({ length: 26 }, () => `<circle cx="${Math.random() * 400}" cy="${Math.random() * 300}" r="${.6 + Math.random() * 1.6}" fill="#fff" opacity="${.3 + Math.random() * .6}"/>`).join('');
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+                <defs><radialGradient id="g" cx=".3" cy=".3" r="1"><stop offset="0" stop-color="${g.color}"/><stop offset="1" stop-color="#0B1033"/></radialGradient></defs>
+                <rect width="400" height="300" fill="url(#g)"/>${stars}
+                <text x="200" y="160" font-size="120" text-anchor="middle" dominant-baseline="middle">${g.emoji}</text>
+            </svg>`;
+            return placeholderCache[it.id] = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        }
+        function imageUrlFor(it) { return CREDITS[it.id] ? `space-images/${it.id}.webp` : placeholderFor(it); }
+        function itemImg(it) {
+            return `<img src="${imageUrlFor(it)}" alt="${escapeHtml(it.name)}" data-id="${it.id}" draggable="false" onerror="imgFailed(this)">`;
+        }
+        function imgFailed(img) { img.onerror = null; img.src = placeholderFor(itemById[img.dataset.id]); }
+        // Pictures that are drawings, computer models or artist's impressions rather than photos
+        const ARTWORK_IDS = ['juice', 'hera', 'mmx', 'tiangong', 'salyut_1', 'cassini', 'asteroid_belt', 'sirius'];
+        const isArtwork = id => ARTWORK_IDS.includes(id) || (CREDITS[id] && /artist|impression|render|concept|artwork|model|CAD|illustration/i.test(CREDITS[id].file));
+        function creditText(it) {
+            const c = CREDITS[it.id];
+            if (!c) return 'Drawn placeholder. A real picture is coming soon!';
+            return `${isArtwork(it.id) ? "🎨 Artist's impression or model · " : '📷 '}${c.author} · ${c.license} · Wikimedia Commons`;
+        }
+
+        // =====================================================================
+        //  SOUND, SPEECH, OVERLAYS
+        // =====================================================================
+        let audioCtx = null;
+        function getAudio() {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                return audioCtx;
+            } catch (e) { return null; }
+        }
+        function tone(ctx, { freq, to = freq, dur = .2, type = 'sine', vol = .25, delay = 0 }) {
+            const t = ctx.currentTime + delay, osc = ctx.createOscillator(), gain = ctx.createGain();
+            osc.type = type; osc.frequency.setValueAtTime(freq, t); osc.frequency.exponentialRampToValueAtTime(to, t + dur);
+            gain.gain.setValueAtTime(vol, t); gain.gain.exponentialRampToValueAtTime(.001, t + dur);
+            osc.connect(gain); gain.connect(ctx.destination); osc.start(t); osc.stop(t + dur + .02);
+        }
+        function noise(ctx, { dur = .3, vol = .3, from = 800, to = 200, type = 'lowpass', delay = 0 }) {
+            const len = Math.floor(ctx.sampleRate * dur), buf = ctx.createBuffer(1, len, ctx.sampleRate), data = buf.getChannelData(0);
+            for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+            const src = ctx.createBufferSource(), filt = ctx.createBiquadFilter(), gain = ctx.createGain(), t = ctx.currentTime + delay;
+            src.buffer = buf; filt.type = type; filt.frequency.setValueAtTime(from, t); filt.frequency.exponentialRampToValueAtTime(to, t + dur);
+            gain.gain.setValueAtTime(vol, t); gain.gain.exponentialRampToValueAtTime(.001, t + dur);
+            src.connect(filt); filt.connect(gain); gain.connect(ctx.destination); src.start(t);
+        }
+        function playSound(type) {
+            const ctx = getAudio(); if (!ctx) return;
+            switch (type) {
+                case 'win': [523, 659, 784, 1047].forEach((f, i) => tone(ctx, { freq: f, dur: .25, type: 'triangle', vol: .22, delay: i * .09 })); break;
+                case 'correct': tone(ctx, { freq: 523, to: 1046, dur: .35, vol: .25 }); break;
+                case 'collect': tone(ctx, { freq: 880, to: 1320, dur: .12, type: 'triangle', vol: .2 }); tone(ctx, { freq: 1320, to: 1760, dur: .14, type: 'triangle', vol: .18, delay: .07 }); break;
+                case 'flip': tone(ctx, { freq: 600, to: 750, dur: .07, type: 'triangle', vol: .12 }); break;
+                case 'wrong': tone(ctx, { freq: 180, to: 70, dur: .3, type: 'sawtooth', vol: .2 }); break;
+                case 'jump': tone(ctx, { freq: 300, to: 1200, dur: .25, type: 'sine', vol: .14 }); tone(ctx, { freq: 600, to: 2000, dur: .2, type: 'triangle', vol: .06, delay: .05 }); break;
+                case 'crash': noise(ctx, { dur: .3, vol: .35, from: 1200, to: 150 }); tone(ctx, { freq: 120, to: 40, dur: .3, type: 'sawtooth', vol: .2 }); break;
+                case 'storm':  // dust storm whoosh
+                    noise(ctx, { dur: .6, vol: .45, from: 3000, to: 300, type: 'bandpass' });
+                    tone(ctx, { freq: 200, to: 60, dur: .4, type: 'sawtooth', vol: .12 });
+                    break;
+                case 'hole':   // black hole rumble
+                    noise(ctx, { dur: .6, vol: .4, from: 400, to: 60, type: 'lowpass' });
+                    tone(ctx, { freq: 70, to: 35, dur: .7, type: 'sawtooth', vol: .2 });
+                    break;
+            }
+        }
+        function speak(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text.replace(/[★☭]/g, '')); u.rate = .9; u.pitch = 1.05;
+            window.speechSynthesis.speak(u);
+        }
+        function stopSpeaking() { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); }
+        function celebrate(power = 150) { if (window.confetti) confetti({ particleCount: power, spread: 90, origin: { y: .6 }, colors: ['#FF7A1A', '#FFC233', '#6A4FC9', '#2E9C8F', '#FFFFFF'] }); }
+
+        function showWinOverlay(title, message, callback, imgUrl = null, btnText = 'Play Again') {
+            document.getElementById('win-title').innerText = title;
+            document.getElementById('win-message').innerText = message;
+            const imgEl = document.getElementById('win-img');
+            if (imgUrl) { imgEl.src = imgUrl; imgEl.style.display = 'inline-block'; } else { imgEl.style.display = 'none'; }
+            const btn = document.getElementById('win-btn');
+            btn.innerText = btnText;
+            btn.onclick = () => { document.getElementById('win-overlay').style.display = 'none'; callback(); };
+            document.getElementById('win-overlay').style.display = 'flex';
+        }
+        let toastTimer = null;
+        function toast(msg, ms = 1800) {
+            const el = document.getElementById('toast');
+            el.innerText = msg; el.classList.add('show');
+            clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms);
+        }
+
+        // =====================================================================
+        //  NAVIGATION
+        // =====================================================================
+        let currentScreen = 'database';
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.screen === screenId));
+            document.getElementById(`screen-${screenId}`).classList.add('active');
+            currentScreen = screenId;
+            stopSpeaking(); mazeStop(); dashStop(); labStop();
+            document.getElementById('win-overlay').style.display = 'none';
+            window.scrollTo({ top: 0 });
+
+            if (screenId === 'solar') selectBody(selectedBody);
+            if (screenId === 'timeline') selectEra(selectedEra);
+            if (screenId === 'lab') labStart();
+            if (screenId === 'match') setupMemoryGame(currentCardTotal);
+            if (screenId === 'maze') { if (!M) mazeNewGame(); else mazeStart(); }
+            if (screenId === 'quiz') initQuiz();
+            if (screenId === 'guess') initGuessGame();
+            if (screenId === 'dash') dashEnter();
+            if (screenId === 'credits') renderCredits();
+        }
+        document.querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', () => switchScreen(b.dataset.screen)));
+        document.getElementById('open-credits').onclick = () => switchScreen('credits');
+
+        // =====================================================================
+        //  CARDS & MODAL
+        // =====================================================================
+        function cardTag(it) {
+            const c = SPACE_COUNTRIES[it.country];
+            if (c) return `<span class="item-tag" style="--tc:${c.color}">${c.flag} ${c.short}${it.year ? ' · ' + it.year : ''}</span>`;
+            return '';
+        }
+        function itemCard(it) {
+            const g = SPACE_GROUPS[it.group];
+            return `<div class="item-card" data-id="${it.id}" style="--pc:${g.color}">
+                <div class="item-thumb">${itemImg(it)}${cardTag(it)}</div>
+                <h3>${escapeHtml(it.name)}</h3>
+                <div class="item-meta">${g.emoji} ${g.short}</div>
+            </div>`;
+        }
+        function renderCards(gridEl, list, emptyMsg = 'Nothing found. Try another search!') {
+            gridEl.innerHTML = list.length ? list.map(itemCard).join('') : `<p class="empty-note">${emptyMsg}</p>`;
+        }
+        document.addEventListener('click', e => {
+            const card = e.target.closest('.item-card, .event-card.linked');
+            if (card) openModal(itemById[card.dataset.id]);
+        });
+
+        const eventForItem = it => SPACE_EVENTS.find(ev => ev[3] === it.name);
+        const solarFor = it => SOLAR_BODIES.find(b => b.name === it.name);
+        let modalItem = null;
+        function openModal(it) {
+            modalItem = it;
+            const g = SPACE_GROUPS[it.group], c = SPACE_COUNTRIES[it.country];
+            document.getElementById('modal-card').style.setProperty('--pc', g.color);
+            document.getElementById('modal-media').innerHTML = itemImg(it);
+            document.getElementById('modal-credit').innerText = creditText(it);
+            document.getElementById('modal-title').innerText = it.name;
+            const yearChip = it.year ? `<span class="info-chip">📅 ${it.group === 'scientist' ? 'Born ' : it.group === 'future' ? 'Planned ' : ''}${it.year}</span>` : '';
+            document.getElementById('modal-chips').innerHTML =
+                `<span class="info-chip group">${g.emoji} ${g.short}</span>${c ? `<span class="info-chip country" style="--cc:${c.color}">${c.flag} ${c.short === 'Teamwork' ? 'Many countries' : c.short}</span>` : ''}${yearChip}`;
+            document.getElementById('modal-desc').innerText = it.desc;
+            document.getElementById('modal-speech').innerText = `"${it.bigClue}"`;
+            document.getElementById('modal-group').innerText = `${g.emoji} ${g.about}`;
+            const goto = document.getElementById('modal-goto');
+            if (solarFor(it)) { goto.style.display = ''; goto.innerText = '🪐 See in the Solar System'; }
+            else if (eventForItem(it)) { goto.style.display = ''; goto.innerText = '🏁 See on the timeline'; }
+            else goto.style.display = 'none';
+            document.getElementById('item-modal').classList.add('open');
+            playSound('flip');
+        }
+        function closeModal() { document.getElementById('item-modal').classList.remove('open'); stopSpeaking(); }
+        document.getElementById('modal-close').onclick = closeModal;
+        document.getElementById('item-modal').addEventListener('click', e => { if (e.target.id === 'item-modal') closeModal(); });
+        document.getElementById('modal-speak').onclick = () => speak(`${modalItem.name}. ${modalItem.desc} ${modalItem.bigClue}`);
+        document.getElementById('modal-goto').onclick = () => {
+            const it = modalItem; closeModal();
+            if (solarFor(it)) { selectedBody = it.name; switchScreen('solar'); return; }
+            const ev = eventForItem(it);
+            selectedEra = eraOf(ev[0]); switchScreen('timeline');
+            setTimeout(() => {
+                const el = document.querySelector(`.event-card[data-id="${it.id}"]`);
+                if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 2500); }
+            }, 350);
+        };
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        // =====================================================================
+        //  SPACE-PEDIA
+        // =====================================================================
+        const sortedItems = [...items].sort((a, b) => a.name.replace(/^The /, '').localeCompare(b.name.replace(/^The /, '')));
+        let dbGroup = 'all';
+        function groupChips(list, active) {
+            const counts = {}; list.forEach(it => counts[it.group] = (counts[it.group] || 0) + 1);
+            let html = `<button class="chip ${active === 'all' ? 'active' : ''}" data-group="all">⭐ All <span class="count">${list.length}</span></button>`;
+            Object.entries(SPACE_GROUPS).forEach(([key, g]) => {
+                if (counts[key]) html += `<button class="chip ${active === key ? 'active' : ''}" data-group="${key}">${g.emoji} ${g.label} <span class="count">${counts[key]}</span></button>`;
+            });
+            return html;
+        }
+        function renderDatabase() {
+            const q = document.getElementById('db-search').value.trim().toLowerCase();
+            const list = (dbGroup === 'all' ? sortedItems : items).filter(it => (dbGroup === 'all' || it.group === dbGroup) && (!q || it.name.toLowerCase().includes(q)));
+            document.getElementById('db-filters').innerHTML = groupChips(items, dbGroup);
+            renderCards(document.getElementById('item-grid'), list);
+        }
+        document.getElementById('db-filters').addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) { dbGroup = c.dataset.group; renderDatabase(); } });
+        document.getElementById('db-search').addEventListener('input', renderDatabase);
+        document.getElementById('db-subtitle').innerText = `${items.length} amazing things in space: planets, stars, rockets and space heroes. Tap one to learn all about it!`;
+        renderDatabase();
+
+        // =====================================================================
+        //  SOLAR SYSTEM
+        // =====================================================================
+        let selectedBody = 'Earth', solarScale = 'easy', calcWeight = storageGet('calcWeight', 25), calcAge = storageGet('calcAge', 6);
+        const solarSvg = document.getElementById('solar-svg');
+        const JUP_R = 69911;
+        function bodyRadius(b) {
+            if (solarScale === 'real') return Math.max(.8, 55 * b.radius / JUP_R);
+            return 7 + 50 * Math.pow(b.radius / JUP_R, .65);
+        }
+        function buildSolar() {
+            const cy = 140, planets = SOLAR_BODIES.slice(1);
+            const radii = planets.map(bodyRadius);
+            const sunR = solarScale === 'real' ? 55 * SOLAR_BODIES[0].radius / JUP_R : 420;
+            const sunEdge = 78, left = 100, right = 962;
+            const halfW = (b, r) => b.name === 'Saturn' ? r * 1.8 : r;   // Saturn's rings need extra room
+            const gap = (right - left - planets.reduce((s, b, i) => s + 2 * halfW(b, radii[i]), 0)) / (planets.length - 1);
+            let html = `<defs>${SOLAR_BODIES.map((b, i) => `<radialGradient id="pg${i}" cx=".35" cy=".35" r=".75"><stop offset="0" stop-color="${b.color[0]}"/><stop offset="1" stop-color="${b.color[1]}"/></radialGradient>`).join('')}
+                <radialGradient id="sunglow" cx=".5" cy=".5" r=".5"><stop offset=".85" stop-color="#FFB300" stop-opacity=".5"/><stop offset="1" stop-color="#FFB300" stop-opacity="0"/></radialGradient></defs>`;
+            for (let i = 0; i < 90; i++) html += `<circle cx="${(i * 137.5) % 1000}" cy="${(i * 71.3) % 300}" r="${(i % 3) * .5 + .5}" fill="#fff" opacity="${.25 + (i % 5) * .12}"/>`;
+            // the Sun peeks in from the left
+            html += `<circle cx="${sunEdge - sunR}" cy="${cy}" r="${sunR * 1.06}" fill="url(#sunglow)" pointer-events="none"/>
+                <circle class="planet-hit" data-body="Sun" cx="${sunEdge - sunR}" cy="${cy}" r="${sunR}" fill="url(#pg0)"/>
+                <circle class="planet-ring" data-ring="Sun" cx="${sunEdge - sunR}" cy="${cy}" r="${sunR + 5}"/>
+                <text class="planet-label" x="14" y="270">Sun</text>`;
+            let x = left;
+            planets.forEach((b, i) => {
+                const r = radii[i], hw = halfW(b, r), px = x + hw; x += 2 * hw + gap;
+                b._x = px; b._r = r;
+                if (b.name === 'Saturn') html += `<ellipse cx="${px}" cy="${cy}" rx="${r * 1.75}" ry="${r * .5}" fill="none" stroke="#E6CF92" stroke-width="${Math.max(1, r * .22)}" opacity=".9" pointer-events="none"/>`;
+                if (b.name === 'Uranus') html += `<ellipse cx="${px}" cy="${cy}" rx="${r * .35}" ry="${r * 1.6}" fill="none" stroke="#B8E8EE" stroke-width="${Math.max(.6, r * .06)}" opacity=".7" pointer-events="none"/>`;
+                html += `<circle cx="${px}" cy="${cy}" r="${r}" fill="url(#pg${i + 1})" pointer-events="none"/>`;
+                if (b.name === 'Jupiter') html += `<g pointer-events="none" opacity=".35" stroke="#8A5A33" stroke-width="${r * .08}"><line x1="${px - r * .95}" y1="${cy - r * .3}" x2="${px + r * .95}" y2="${cy - r * .3}"/><line x1="${px - r * .98}" y1="${cy + r * .15}" x2="${px + r * .98}" y2="${cy + r * .15}"/><line x1="${px - r * .85}" y1="${cy + r * .5}" x2="${px + r * .85}" y2="${cy + r * .5}"/></g><ellipse cx="${px + r * .35}" cy="${cy + r * .3}" rx="${r * .2}" ry="${r * .12}" fill="#C8553D" pointer-events="none"/>`;
+                if (b.name === 'Earth') html += `<path d="M${px - r * .5} ${cy - r * .3} q${r * .4} -${r * .4} ${r * .7} 0 q-${r * .2} ${r * .5} -${r * .6} ${r * .3}z" fill="#3FA34D" pointer-events="none"/>`;
+                if (b.name === 'Saturn' && r > 3) html += `<path d="M${px - r * 1.75} ${cy} a${r * 1.75} ${r * .5} 0 0 0 ${r * 3.5} 0" fill="none" stroke="#E6CF92" stroke-width="${Math.max(1, r * .22)}" opacity=".9" pointer-events="none"/>`;
+                html += `<circle class="planet-ring" data-ring="${b.name}" cx="${px}" cy="${cy}" r="${r + 6}"/>`;
+                html += `<circle class="planet-hit" data-body="${b.name}" cx="${px}" cy="${cy}" r="${Math.max(r, 26)}" fill="transparent"/>`;
+                const ly = (i % 2 && solarScale === 'real') ? 250 : 270;
+                html += `<text class="planet-label" x="${px}" y="${b.name === 'Pluto' ? ly : ly}" text-anchor="middle" font-size="${b.name === 'Pluto' ? 14 : 17}">${b.name}</text>`;
+            });
+            html += `<g class="solar-marker" id="solar-marker"><g class="hop"><text font-size="30" text-anchor="middle">🚀</text></g></g>`;
+            solarSvg.innerHTML = html;
+            document.getElementById('solar-hint').innerText = solarScale === 'real'
+                ? 'These are the real sizes! The Sun is so big it doesn\'t fit. (The distances are NOT to scale: the planets are really much, much farther apart.)'
+                : 'Small planets are drawn a bit bigger so you can see them. Tap "Real sizes" to see how big they really are!';
+        }
+        solarSvg.addEventListener('click', e => { const el = e.target.closest('[data-body]'); if (el) { selectBody(el.dataset.body); playSound('flip'); } });
+        document.getElementById('solar-scale').addEventListener('click', e => {
+            const c = e.target.closest('.chip'); if (!c) return;
+            solarScale = c.dataset.scale;
+            document.querySelectorAll('#solar-scale .chip').forEach(b => b.classList.toggle('active', b === c));
+            buildSolar(); selectBody(selectedBody);
+        });
+        function selectBody(name) {
+            selectedBody = name;
+            const b = SOLAR_BODIES.find(x => x.name === name), it = itemByName[name];
+            solarSvg.querySelectorAll('.planet-ring').forEach(r => r.classList.toggle('on', r.dataset.ring === name));
+            const mx = name === 'Sun' ? 40 : b._x, my = name === 'Sun' ? 70 : 140 - Math.max(b._r, 14) - 16;
+            document.getElementById('solar-marker').style.transform = `translate(${mx}px, ${my}px)`;
+            const panel = document.getElementById('planet-panel');
+            panel.style.setProperty('--pc', b.color[1]);
+            const g = b.gravity, kind = name === 'Sun' ? 'Our star' : name === 'Pluto' ? 'A dwarf planet' : `Planet number ${SOLAR_BODIES.indexOf(b)} from the Sun`;
+            const gravityText = g === 1 ? 'This is normal gravity, the pull you feel every day.' : g > 1 ? `${g} times stronger than on Earth. You'd feel super heavy!` : `Only ${Math.round(g * 100)}% of Earth's pull. You could jump really high!`;
+            panel.innerHTML = `
+                <div class="ip-head"><span class="ip-emoji"><img src="${imageUrlFor(it)}" alt="" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid #fff"></span><div><h2>${name}</h2><p>${kind}</p></div>
+                <div class="ip-btns"><button class="speak-btn" id="body-speak">🔊 Read to me</button><button class="speak-btn orange" id="body-more">📚 More</button></div></div>
+                <div class="ip-box"><h4>📏 Distance from the Sun</h4><p>${b.distance}</p></div>
+                <div class="ip-box"><h4>🌗 Length of a Day</h4><p>${b.day}</p></div>
+                <div class="ip-box"><h4>🔄 Length of a Year</h4><p>${b.yearText}</p></div>
+                <div class="ip-box"><h4>🌙 Moons</h4><p>${b.moons}</p></div>
+                <div class="ip-box"><h4>🌡️ Temperature</h4><p>${b.temp}</p></div>
+                <div class="ip-box"><h4>🧲 Gravity</h4><p>${gravityText}</p></div>
+                <div class="ip-box ip-fun"><h4>💡 Fun Fact</h4><p>${it.desc}</p></div>`;
+            document.getElementById('body-speak').onclick = () => speak(`${name}. ${kind}. Distance from the Sun: ${b.distance}. A day lasts ${b.day}. A year lasts ${b.yearText}. Moons: ${b.moons}. Temperature: ${b.temp}. ${it.desc}`);
+            document.getElementById('body-more').onclick = () => openModal(it);
+        }
+        function renderCalcs() {
+            document.getElementById('calc-weight').innerText = `${calcWeight} kg`;
+            document.getElementById('calc-age').innerText = `${calcAge} year${calcAge === 1 ? '' : 's'}`;
+            document.getElementById('weight-results').innerHTML = SOLAR_BODIES.filter(b => b.name !== 'Sun').map(b =>
+                `<div class="calc-res">${b.name}<b>${(calcWeight * b.gravity).toFixed(calcWeight * b.gravity < 10 ? 1 : 0)} kg</b></div>`).join('')
+                + `<div class="calc-res">The Moon<b>${(calcWeight * .165).toFixed(1)} kg</b></div>`;
+            document.getElementById('age-results').innerHTML = SOLAR_BODIES.filter(b => b.year).map(b => {
+                const age = calcAge / b.year;
+                const txt = age >= 10 ? Math.floor(age) : age >= 1 ? age.toFixed(1) : age.toFixed(2);
+                return `<div class="calc-res">${b.name}<b>${txt}</b>${age < 1 ? 'not even 1!' : 'years old'}</div>`;
+            }).join('');
+        }
+        document.querySelectorAll('[data-calc]').forEach(btn => bindHold(btn, () => {
+            const step = +btn.dataset.step;
+            if (btn.dataset.calc === 'w') { calcWeight = Math.max(1, Math.min(150, calcWeight + step)); storageSet('calcWeight', calcWeight); }
+            else { calcAge = Math.max(1, Math.min(100, calcAge + step)); storageSet('calcAge', calcAge); }
+            renderCalcs();
+        }, 140));
+
+        // =====================================================================
+        //  SPACE RACE TIMELINE
+        // =====================================================================
+        const ERAS = {
+            race: { name: 'The Race Begins', years: '1957–1961', from: 1957, to: 1961, emoji: '🛰️', grad: ['#E0524A', '#8E1E1A'],
+                about: 'After World War II, the USA and the Soviet Union (USSR) became rivals. Both wanted to show they were the best at science, so they raced to be first in space.',
+                more: 'The Soviet Union won most of the early "firsts": the first satellite, the first animal in orbit and the first person in space.',
+                fun: 'Sputnik went BEEP-BEEP so loudly on the radio that people all over the world tuned in to listen to it!' },
+            moon: { name: 'To the Moon', years: '1962–1972', from: 1962, to: 1972, emoji: '🌕', grad: ['#4F86E8', '#1D4699'],
+                about: 'President Kennedy promised that America would land a man on the Moon. The Soviet Union raced too, with the first woman in space and the first spacewalk.',
+                more: 'In 1969 Apollo 11 landed on the Moon. Twelve astronauts walked on the Moon between 1969 and 1972.',
+                fun: 'The footprints left on the Moon are still there, because there is no wind or rain to blow them away!' },
+            stations: { name: 'Stations & Shuttles', years: '1973–2011', from: 1973, to: 2011, emoji: '🏠', grad: ['#9C6ADE', '#56309A'],
+                about: 'After the Moon, people learned to live in space for a long time, on space stations like Skylab, Mir and the ISS. The Space Shuttle flew 135 missions.',
+                more: 'The rivals became friends! In 1975 American and Soviet crews shook hands in space, and later they built the ISS together.',
+                fun: 'Robots explored the planets too. Voyager 1 is still sending messages home from beyond the planets!' },
+            newspace: { name: 'New Space', years: '2012–today', from: 2012, to: 2026, emoji: '🚀', grad: ['#2EAE9C', '#14665C'],
+                about: 'Now lots of countries explore space: China, India, Japan, Europe and the UAE. Companies like SpaceX build rockets that land and fly again.',
+                more: 'In 2026 the Artemis II astronauts flew around the Moon, the first people there since 1972.',
+                fun: 'China landed on the far side of the Moon, and India landed near its south pole!' },
+            future: { name: 'The Future', years: 'Coming soon!', from: 2027, to: 9999, emoji: '🔮', grad: ['#E0629E', '#8E2A5E'],
+                about: 'The next big race is back to the Moon! NASA and China both plan to land astronauts there, and to build bases near the south pole.',
+                more: 'Space plans change a lot, so some of these dates will probably move.',
+                fun: 'One day, maybe someone reading this will be the first person to walk on Mars!' }
+        };
+        const eraOf = year => Object.keys(ERAS).find(k => year >= ERAS[k].from && year <= ERAS[k].to);
+        let selectedEra = 'race';
+        (function buildTimeline() {
+            const tl = document.getElementById('timeline');
+            Object.entries(ERAS).forEach(([key, e]) => {
+                const n = SPACE_EVENTS.filter(ev => eraOf(ev[0]) === key).length;
+                tl.insertAdjacentHTML('beforeend', `<button class="tl-seg" data-era="${key}" style="background: linear-gradient(160deg, ${e.grad[0]}, ${e.grad[1]})">
+                    <span class="tl-emoji">${e.emoji}</span><span class="tl-name">${e.name}</span><span class="tl-years">${e.years}</span><span class="tl-count">${n} events</span></button>`);
+            });
+            tl.addEventListener('click', e => { const s = e.target.closest('.tl-seg'); if (s) { selectEra(s.dataset.era); playSound('flip'); } });
+            const used = [...new Set(SPACE_EVENTS.map(ev => ev[1]))];
+            document.getElementById('tl-legend').innerHTML = used.map(k => `<span><i style="background:${SPACE_COUNTRIES[k].color}"></i>${SPACE_COUNTRIES[k].flag} ${SPACE_COUNTRIES[k].short === 'Teamwork' ? 'Countries together' : SPACE_COUNTRIES[k].short}</span>`).join('');
+        })();
+        function moveTlMarker() {
+            const seg = document.querySelector(`.tl-seg[data-era="${selectedEra}"]`), tl = document.getElementById('timeline');
+            if (!seg || !tl.offsetWidth) return;
+            const s = seg.getBoundingClientRect(), t = tl.getBoundingClientRect();
+            document.getElementById('tl-marker').style.left = (s.left - t.left + s.width / 2) + 'px';
+        }
+        window.addEventListener('resize', moveTlMarker);
+        function selectEra(key) {
+            selectedEra = key;
+            const e = ERAS[key];
+            document.querySelectorAll('.tl-seg').forEach(s => s.classList.toggle('selected', s.dataset.era === key));
+            requestAnimationFrame(moveTlMarker);
+            const panel = document.getElementById('era-panel');
+            panel.style.setProperty('--pc', e.grad[1]);
+            panel.innerHTML = `
+                <div class="ip-head"><span class="ip-emoji">${e.emoji}</span><div><h2>${e.name}</h2><p>${e.years}</p></div>
+                <div class="ip-btns"><button class="speak-btn" id="era-speak">🔊 Read to me</button></div></div>
+                <div class="ip-box"><h4>📖 What Happened?</h4><p>${e.about}</p></div>
+                <div class="ip-box"><h4>🏆 Big Moments</h4><p>${e.more}</p></div>
+                <div class="ip-box ip-fun"><h4>💡 Fun Fact</h4><p>${e.fun}</p></div>`;
+            document.getElementById('era-speak').onclick = () => speak(`${e.name}. ${e.about} ${e.more} ${e.fun}`);
+            document.getElementById('era-events-title').innerText = `${e.emoji} ${e.name}: what happened?`;
+            document.getElementById('event-list').innerHTML = SPACE_EVENTS.filter(ev => eraOf(ev[0]) === key).map(([year, country, text, link]) => {
+                const c = SPACE_COUNTRIES[country], it = link ? itemByName[link] : null;
+                return `<div class="event-card ${it ? 'linked' : ''}" ${it ? `data-id="${it.id}"` : ''} style="--cc:${c.color}">
+                    <div class="ev-year">${year}<small>${c.flag} ${c.short === 'Teamwork' ? 'Together' : c.short}</small></div>
+                    <div class="ev-text">${escapeHtml(text)}</div>
+                    ${it ? `<div class="ev-thumb">${itemImg(it)}</div>` : ''}</div>`;
+            }).join('');
+        }
+
+        // =====================================================================
+        //  SCIENCE LAB (animated diagrams drawn in code)
+        // =====================================================================
+        const labCanvas = document.getElementById('lab-canvas'), labCtx = labCanvas.getContext('2d'), LW = 700, LH = 440;
+        const LAB_STARS = Array.from({ length: 120 }, () => ({ x: Math.random() * LW, y: Math.random() * LH, r: Math.random() * 1.4 + .3, p: Math.random() * 6 }));
+        let labRaf = null, labT0 = 0, labTopic = 'day';
+        const LAB_TOPICS = {
+            day: { tab: '🌗 Day & Night', title: 'Why Is a Day 24 Hours?',
+                text: ['The Earth is always spinning, like a top. It turns all the way round once every 24 hours.', 'The side facing the Sun has daytime. The side facing away has night-time.', 'Watch London: as the Earth spins, it goes from day into night and back again!', 'Other planets spin at different speeds. A day on Jupiter is only 10 hours, but a day on Venus lasts longer than its whole year!'] },
+            year: { tab: '🔄 A Year', title: 'What Is a Year?',
+                text: ['A year is the time it takes the Earth to travel all the way around the Sun.', 'That takes 365 days and about 6 hours.', 'Those extra 6 hours add up! After 4 years they make one whole extra day.', 'So every 4 years we have a leap year, with a 29th of February. A leap year has 366 days.'] },
+            seasons: { tab: '☀️ Seasons', title: 'Why Do We Have Seasons?',
+                text: ['The Earth is tilted, so it leans over a little bit as it goes around the Sun.', 'When our half of the Earth leans towards the Sun, the sunshine is stronger and the days are longer. That\'s summer!', 'When our half leans away, the sunshine is weaker and the days are shorter. That\'s winter.', 'When it\'s summer in London, it\'s winter in Australia!'] },
+            moon: { tab: '🌙 Moon Phases', title: 'Why Does the Moon Change Shape?',
+                text: ['The Moon doesn\'t make its own light. The Sun lights up half of it, like a torch shining on a ball.', 'As the Moon goes around the Earth, we see different amounts of its sunny side.', 'That\'s why it changes from a thin crescent to a full Moon and back again.', 'One trip around the Earth takes about 29 and a half days, about one month. "Month" comes from "Moon"!'] },
+            light: { tab: '💡 Light-Years', title: 'How Far Is a Light-Year?',
+                text: ['Light is the fastest thing there is. It goes 300,000 kilometres every second!', 'Light from the Moon takes just over 1 second to reach us, and light from the Sun takes about 8 minutes.', 'Stars are so far away that we measure them in light-years: how far light goes in a whole year.', 'Light from Proxima Centauri, the nearest star after the Sun, takes more than 4 years to reach us!'] },
+            float: { tab: '👩‍🚀 Floating', title: 'Why Do Astronauts Float?',
+                text: ['Gravity still pulls on astronauts in space. So why do they float?', 'Imagine firing a cannonball. The faster it goes, the farther it flies before it hits the ground.', 'If it goes fast enough, the ground curves away beneath it as fast as it falls, so it falls all the way around the Earth! That\'s called an orbit.', 'The ISS and the astronauts are falling around the Earth together, so the astronauts float inside it.'] }
+        };
+        (function buildLabTabs() {
+            document.getElementById('lab-tabs').innerHTML = Object.entries(LAB_TOPICS).map(([k, t]) => `<button class="chip ${k === labTopic ? 'active' : ''}" data-topic="${k}">${t.tab}</button>`).join('');
+            document.getElementById('lab-tabs').addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) { labSelect(c.dataset.topic); playSound('flip'); } });
+            document.getElementById('lab-speak').onclick = () => { const t = LAB_TOPICS[labTopic]; speak(`${t.title} ${t.text.join(' ')}`); };
+        })();
+        function labSelect(k) {
+            labTopic = k; labT0 = performance.now(); stopSpeaking();
+            document.querySelectorAll('#lab-tabs .chip').forEach(c => c.classList.toggle('active', c.dataset.topic === k));
+            const t = LAB_TOPICS[k];
+            document.getElementById('lab-title').innerText = t.title;
+            document.getElementById('lab-body').innerHTML = t.text.map(p => `<p>${escapeHtml(p)}</p>`).join('');
+            lab.cannon = null;
+        }
+        function labStart() { labSelect(labTopic); cancelAnimationFrame(labRaf); labRaf = requestAnimationFrame(labFrame); }
+        function labStop() { cancelAnimationFrame(labRaf); labRaf = null; }
+        const lab = { cannon: null };
+        function labText(ctx, text, x, y, size = 20, color = '#fff', align = 'center') {
+            ctx.font = `800 ${size}px ${getComputedStyle(document.body).fontFamily}`; ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y);
+        }
+        function drawSunAt(ctx, x, y, r, t) {
+            const g = ctx.createRadialGradient(x, y, r * .2, x, y, r * 1.8); g.addColorStop(0, '#FFF6C2'); g.addColorStop(.45, '#FFC233'); g.addColorStop(.56, 'rgba(255,140,30,.5)'); g.addColorStop(1, 'rgba(255,140,30,0)');
+            ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * 1.8 + Math.sin(t * 3) * 2, 0, Math.PI * 2); ctx.fill();
+        }
+        function drawEarthBall(ctx, x, y, r, spin = 0, lightFrom = null) {
+            ctx.save(); ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.clip();
+            ctx.fillStyle = '#2F7FD6'; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+            ctx.fillStyle = '#3FA34D';
+            for (let i = 0; i < 5; i++) { const a = spin + i * 1.3; ctx.beginPath(); ctx.ellipse(x + Math.cos(a) * r * .55, y + Math.sin(a) * r * .55, r * .32, r * .2, a, 0, Math.PI * 2); ctx.fill(); }
+            if (lightFrom != null) {   // night side
+                ctx.fillStyle = 'rgba(5,8,30,.72)'; ctx.beginPath(); ctx.arc(x, y, r + 1, lightFrom + Math.PI / 2, lightFrom + Math.PI * 1.5); ctx.closePath(); ctx.fill();
+            }
+            ctx.restore();
+        }
+        // Draw the Moon as we see it from Earth. phase: 0 new, 0.25 first quarter, 0.5 full, 0.75 last quarter
+        function drawPhase(ctx, x, y, r, phase) {
+            ctx.save(); ctx.translate(x, y);
+            ctx.fillStyle = '#2A2D45'; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+            let p = phase % 1; if (p > .5) { ctx.scale(-1, 1); p = 1 - p; }
+            const rx = r * Math.cos(2 * Math.PI * p);
+            ctx.fillStyle = '#F2EFD9'; ctx.beginPath(); ctx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2, false);
+            ctx.ellipse(0, 0, Math.abs(rx), r, 0, Math.PI / 2, -Math.PI / 2, rx > 0); ctx.fill();
+            ctx.restore();
+        }
+        function labFrame(now) {
+            const ctx = labCtx, t = (now - labT0) / 1000;
+            ctx.fillStyle = '#070A1E'; ctx.fillRect(0, 0, LW, LH);
+            for (const s of LAB_STARS) { ctx.globalAlpha = .4 + .4 * Math.sin(now / 700 + s.p); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill(); }
+            ctx.globalAlpha = 1;
+            LAB_DRAW[labTopic](ctx, t);
+            labRaf = requestAnimationFrame(labFrame);
+        }
+        const LAB_DRAW = {
+            day(ctx, t) {
+                // looking down on the North Pole; sunlight comes from the left
+                drawSunAt(ctx, -40, LH / 2, 110, t);
+                ctx.strokeStyle = 'rgba(255,220,120,.35)'; ctx.lineWidth = 3;
+                for (let i = 0; i < 7; i++) { const y = 80 + i * 47; ctx.beginPath(); ctx.moveTo(110, y); ctx.lineTo(220, y); ctx.stroke(); }
+                const cx = 400, cy = LH / 2, r = 130, spin = t * (Math.PI * 2 / 10);   // one day = 10 seconds
+                drawEarthBall(ctx, cx, cy, r, -spin, Math.PI);
+                labText(ctx, '☀️ DAY', cx - 70, 36, 24, '#FFC233'); labText(ctx, '🌙 NIGHT', cx + 80, 36, 24, '#9FB4FF');
+                const a = Math.PI - spin;   // London's position, starting at noon facing the Sun
+                const lx = cx + Math.cos(a) * r * .75, ly = cy + Math.sin(a) * r * .75;
+                drawEmoji(ctx, '🏠', lx, ly, 30);
+                const hours = ((t / 10) * 24 + 12) % 24;
+                const isDay = hours >= 6 && hours < 18;
+                labText(ctx, `London: ${String(Math.floor(hours)).padStart(2, '0')}:${String(Math.floor((hours % 1) * 60)).padStart(2, '0')} ${isDay ? '☀️ Daytime' : '🌙 Night-time'}`, cx, LH - 30, 24, isDay ? '#FFC233' : '#9FB4FF');
+                ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy, r + 22, -2.4, -1.4); ctx.stroke();
+                labText(ctx, '↺ spins', cx + 60, cy - r - 30, 16, '#fff');
+                labText(ctx, 'One spin = 24 hours', 610, 36, 16, '#C9C3F5');
+            },
+            year(ctx, t) {
+                const cx = LW / 2, cy = LH / 2 + 10, R = 165, lap = 8;   // one year = 8 seconds
+                drawSunAt(ctx, cx, cy, 46, t);
+                ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.setLineDash([6, 8]); ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(cx, cy, R * 1.25, R, 0, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+                const yrs = t / lap, a = -Math.PI / 2 - yrs * Math.PI * 2;
+                const ex = cx + Math.cos(a) * R * 1.25, ey = cy + Math.sin(a) * R;
+                drawEarthBall(ctx, ex, ey, 20, t * 6, Math.atan2(cy - ey, cx - ex));
+                const yearNo = Math.floor(yrs) % 4 + 1, leap = yearNo === 4, days = leap ? 366 : 365;
+                const day = Math.min(days, Math.floor((yrs % 1) * days) + 1);
+                labText(ctx, `Year ${yearNo}${leap ? ' – LEAP YEAR!' : ''}`, cx, 30, 26, leap ? '#FF7A1A' : '#FFC233');
+                labText(ctx, `Day ${day} of ${days}`, cx, 62, 22, '#fff');
+                for (let i = 0; i < 4; i++) labText(ctx, i < yearNo - 1 || (i === yearNo - 1 && yrs % 1 > .98) ? '🕕' : '⚪', 560 + i * 32, 400, 24);
+                labText(ctx, 'Extra quarter days:', 620, 370, 15, '#C9C3F5');
+                if (leap && yrs % 1 > .9) labText(ctx, '+1 day: 29th February! 🎉', cx, LH - 18, 22, '#FF7A1A');
+            },
+            seasons(ctx, t) {
+                const cx = LW / 2, cy = LH / 2 + 10, R = 220, lap = 12;
+                ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.setLineDash([6, 8]); ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(cx, cy, R * 1.25, R * .55, 0, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+                const a = Math.PI + (t / lap) * Math.PI * 2;   // starts on the left = June (north pole leans towards the Sun on the right)
+                const ex = cx + Math.cos(a) * R * 1.25, ey = cy + Math.sin(a) * R * .55;
+                const behind = Math.sin(a) < 0;
+                if (behind) { drawSeasonEarth(ctx, ex, ey, 34, cx, cy, t); drawSunAt(ctx, cx, cy, 52, t); }
+                else { drawSunAt(ctx, cx, cy, 52, t); drawSeasonEarth(ctx, ex, ey, 34, cx, cy, t); }
+                // the axis always leans to the right, so the north half faces the Sun when Earth is on the left
+                const m = Math.floor(((t / lap) % 1) * 12);   // 0 = June, when London leans most towards the Sun
+                const month = ['June', 'July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March', 'April', 'May'][m];
+                const season = m < 3 ? '☀️ Summer in London' : m < 6 ? '🍂 Autumn in London' : m < 9 ? '❄️ Winter in London' : '🌷 Spring in London';
+                labText(ctx, season, cx, 30, 28, '#FFC233');
+                labText(ctx, month, cx, 62, 20, '#fff');
+                labText(ctx, 'The Earth always leans the same way ↗', cx, LH - 20, 17, '#C9C3F5');
+            },
+            moon(ctx, t) {
+                const cx = 300, cy = LH / 2 + 10, R = 150, lap = 12;
+                ctx.strokeStyle = 'rgba(255,220,120,.3)'; ctx.lineWidth = 3;
+                for (let i = 0; i < 6; i++) { const y = 70 + i * 62; ctx.beginPath(); ctx.moveTo(10, y); ctx.lineTo(70, y); ctx.stroke(); }
+                labText(ctx, '☀️ Sunlight', 50, 30, 18, '#FFC233');
+                ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.setLineDash([6, 8]); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+                drawEarthBall(ctx, cx, cy, 40, t * 2, Math.PI);
+                const th = Math.PI + (t / lap) * Math.PI * 2;   // starts between Earth and Sun = new Moon
+                const mx = cx + Math.cos(th) * R, my = cy - Math.sin(th) * R;
+                ctx.fillStyle = '#2A2D45'; ctx.beginPath(); ctx.arc(mx, my, 18, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#F2EFD9'; ctx.beginPath(); ctx.arc(mx, my, 18, Math.PI / 2, Math.PI * 1.5); ctx.fill();   // the sunny half faces left
+                const phase = ((th - Math.PI) / (Math.PI * 2)) % 1;
+                const names = ['New Moon', 'Waxing Crescent', 'First Quarter', 'Waxing Gibbous', 'Full Moon', 'Waning Gibbous', 'Last Quarter', 'Waning Crescent'];
+                const name = names[Math.floor(((phase + 1 / 16) % 1) * 8)];
+                ctx.fillStyle = 'rgba(255,255,255,.08)'; roundRect(ctx, 490, 70, 190, 250, 20); ctx.fill();
+                labText(ctx, 'What we see', 585, 100, 18, '#C9C3F5');
+                drawPhase(ctx, 585, 190, 62, phase);
+                labText(ctx, name, 585, 290, 20, '#FFC233');
+                labText(ctx, `Day ${Math.floor(phase * 29.5) + 1} of 29½`, 585, 350, 18, '#fff');
+            },
+            light(ctx, t) {
+                labText(ctx, 'Light goes 300,000 km every second! ⚡', LW / 2, 32, 22, '#FFC233');
+                // Earth to Moon in real time: about 1.3 seconds
+                const y1 = 120; drawEarthBall(ctx, 70, y1, 30, t); drawPhase(ctx, 630, y1, 16, .5);
+                const p = (t % 2.3) / 1.3;
+                if (p <= 1) { const x = 105 + p * 505; ctx.fillStyle = '#FFF59D'; ctx.shadowColor = '#FFF59D'; ctx.shadowBlur = 16; ctx.beginPath(); ctx.arc(x, y1, 7, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0; }
+                labText(ctx, 'Earth → Moon: 1.3 seconds (watch it go!)', LW / 2, y1 + 46, 18, '#fff');
+                // Sun to Earth
+                const y2 = 250; drawSunAt(ctx, 60, y2, 26, t); drawEarthBall(ctx, 640, y2, 16, t);
+                const p2 = (t % 20) / 20; ctx.fillStyle = '#FFF59D'; ctx.beginPath(); ctx.arc(95 + p2 * 525, y2, 5, 0, Math.PI * 2); ctx.fill();
+                labText(ctx, 'Sun → Earth: 8 minutes 20 seconds', LW / 2, y2 + 40, 18, '#fff');
+                // Proxima Centauri
+                const y3 = 370; ctx.fillStyle = '#FF6B4A'; ctx.beginPath(); ctx.arc(60, y3, 12, 0, Math.PI * 2); ctx.fill(); drawSunAt(ctx, 640, y3, 12, t);
+                ctx.strokeStyle = 'rgba(255,255,255,.3)'; ctx.setLineDash([3, 10]); ctx.beginPath(); ctx.moveTo(80, y3); ctx.lineTo(620, y3); ctx.stroke(); ctx.setLineDash([]);
+                labText(ctx, 'Proxima Centauri → Sun: more than 4 YEARS!', LW / 2, y3 + 36, 18, '#fff');
+            },
+            float(ctx, t) {
+                const cx = LW / 2, cy = 300, ER = 120, GM = 4.2e6;
+                // the cannonball experiment, then the ISS falling around the Earth
+                if (!lab.cannon || lab.cannon.done) {
+                    const shot = lab.cannon ? (lab.cannon.shot + 1) % 3 : 0, r0 = ER + 28, vC = Math.sqrt(GM / r0);
+                    lab.cannon = { shot, x: cx, y: cy - r0, vx: [.45, .75, 1][shot] * vC, vy: 0, trail: [], done: false, wait: 0, last: t };
+                }
+                const c = lab.cannon, dt = Math.min(.05, t - c.last); c.last = t;
+                if (c.wait > 0) { c.wait -= dt; if (c.wait <= 0) c.done = true; }
+                else for (let i = 0; i < 6; i++) {
+                    const h = dt / 6, dx = c.x - cx, dy = c.y - cy, d = Math.hypot(dx, dy), acc = GM / (d * d);
+                    c.vx -= acc * dx / d * h; c.vy -= acc * dy / d * h; c.x += c.vx * h; c.y += c.vy * h;
+                    c.trail.push([c.x, c.y]); if (c.trail.length > 1400) c.trail.shift();
+                    if (d < ER + 2) { c.wait = 1.2; break; }
+                    if (c.shot === 2 && c.trail.length > 1100) { c.wait = .6; break; }
+                }
+                ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.setLineDash([5, 8]); ctx.beginPath(); ctx.arc(cx, cy, ER + 28, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+                drawEarthBall(ctx, cx, cy, ER, t * .3);
+                ctx.fillStyle = '#7D6A55'; ctx.beginPath(); ctx.moveTo(cx - 26, cy - ER + 6); ctx.lineTo(cx, cy - ER - 26); ctx.lineTo(cx + 26, cy - ER + 6); ctx.fill();
+                ctx.strokeStyle = '#FFC233'; ctx.lineWidth = 3; ctx.beginPath(); c.trail.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke();
+                ctx.fillStyle = '#E0E0E0'; ctx.beginPath(); ctx.arc(c.x, c.y, 7, 0, Math.PI * 2); ctx.fill();
+                labText(ctx, ['Slow: it falls back down quickly', 'Faster: it flies farther before landing', 'Super fast: it falls all the way around. ORBIT!'][c.shot], cx, 30, 22, c.shot === 2 ? '#FF7A1A' : '#FFC233');
+                // the ISS, always falling around the Earth
+                const ia = t * .5, ir = ER + 85, ix = cx + Math.cos(ia) * ir, iy = cy + Math.sin(ia) * ir * .9;
+                ctx.save(); ctx.translate(ix, iy); ctx.rotate(ia + Math.PI / 2);
+                ctx.fillStyle = '#3F5FBF'; ctx.fillRect(-22, -5, 14, 10); ctx.fillRect(8, -5, 14, 10); ctx.fillStyle = '#D8D8D8'; ctx.fillRect(-8, -3, 16, 6);
+                ctx.restore();
+                labText(ctx, 'ISS', ix, iy - 18, 14, '#fff');
+            }
+        };
+        function drawSeasonEarth(ctx, x, y, r, sx, sy, t) {
+            drawEarthBall(ctx, x, y, r, t * 3, Math.atan2(sy - y, sx - x));
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; const tilt = .41;
+            ctx.beginPath(); ctx.moveTo(x - Math.sin(tilt) * r * 1.5, y + Math.cos(tilt) * r * 1.5); ctx.lineTo(x + Math.sin(tilt) * r * 1.5, y - Math.cos(tilt) * r * 1.5); ctx.stroke();
+            labText(ctx, 'N', x + Math.sin(tilt) * r * 1.8, y - Math.cos(tilt) * r * 1.8, 14, '#fff');
+            const ux = x + Math.sin(tilt) * r * .6, uy = y - Math.cos(tilt) * r * .6;
+            ctx.fillStyle = '#FF3B3B'; ctx.beginPath(); ctx.arc(ux, uy, 4, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // =====================================================================
+        //  MATCH
+        // =====================================================================
+        let currentCardTotal = 8, flippedCards = [], matchedCount = 0, lockBoard = false, matchMoves = 0;
+        const matchPool = items.filter(it => CREDITS[it.id]).length >= 20 ? items.filter(it => CREDITS[it.id]) : items;
+        function setupMemoryGame(totalCards) {
+            currentCardTotal = totalCards; matchedCount = 0; flippedCards = []; lockBoard = false; matchMoves = 0;
+            document.querySelectorAll('#match-diff .chip').forEach(b => b.classList.toggle('active', +b.dataset.cards === totalCards));
+            document.getElementById('match-moves').innerText = 'Moves: 0';
+            const grid = document.getElementById('memory-grid'); grid.className = `memory-grid grid-${totalCards}`; grid.innerHTML = '';
+            const picked = shuffle(matchPool).slice(0, totalCards / 2);
+            shuffle([...picked, ...picked]).forEach(it => {
+                const card = document.createElement('div'); card.className = 'memory-card'; card.dataset.id = it.id;
+                card.innerHTML = `<div class="card-face card-front">🚀</div><div class="card-face card-back">${itemImg(it)}<div class="card-label">${escapeHtml(it.name)}</div></div>`;
+                card.onclick = () => flipCard(card); grid.appendChild(card);
+            });
+        }
+        document.getElementById('match-diff').addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) setupMemoryGame(+c.dataset.cards); });
+        function flipCard(card) {
+            if (lockBoard || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+            card.classList.add('flipped'); flippedCards.push(card); playSound('flip');
+            if (flippedCards.length === 2) { matchMoves++; document.getElementById('match-moves').innerText = `Moves: ${matchMoves}`; checkMatch(); }
+        }
+        function checkMatch() {
+            const [c1, c2] = flippedCards;
+            if (c1.dataset.id === c2.dataset.id) {
+                c1.classList.add('matched'); c2.classList.add('matched'); flippedCards = []; matchedCount += 2; playSound('collect');
+                if (matchedCount === currentCardTotal) {
+                    const pairs = currentCardTotal / 2, stars = matchMoves <= pairs + 2 ? 3 : matchMoves <= pairs * 2 ? 2 : 1;
+                    celebrate(); playSound('win');
+                    setTimeout(() => showWinOverlay('⭐ OUT OF THIS WORLD! ⭐', `You matched all the pairs in ${matchMoves} moves!\n${'⭐'.repeat(stars)}`, () => setupMemoryGame(currentCardTotal)), 600);
+                }
+            } else {
+                lockBoard = true;
+                setTimeout(() => { c1.classList.remove('flipped'); c2.classList.remove('flipped'); flippedCards = []; lockBoard = false; }, 1000);
+            }
+        }
+
+        // =====================================================================
+        //  HELPERS FOR CANVAS GAMES
+        // =====================================================================
+        const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+        function drawEmoji(ctx, emoji, x, y, size, flip = false, alpha = 1) {
+            ctx.save(); ctx.globalAlpha *= alpha; ctx.translate(x, y); if (flip) ctx.scale(-1, 1);
+            ctx.font = `${size}px ${EMOJI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000'; // opaque fill, or colour emoji come out see-through
+            ctx.fillText(emoji, 0, 0); ctx.restore();
+        }
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+        }
+        function spawnBurst(list, x, y, colors, count = 14, speed = 160) {
+            for (let i = 0; i < count; i++) {
+                const a = Math.random() * Math.PI * 2, v = speed * (.4 + Math.random() * .8);
+                list.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - speed * .3, life: .6 + Math.random() * .4, max: 1, r: 2 + Math.random() * 4, c: pick(colors) });
+            }
+        }
+        function updateParticles(list, dt, gravity = 300) {
+            for (const p of list) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += gravity * dt; p.life -= dt; }
+            return list.filter(p => p.life > 0);
+        }
+        function drawParticles(ctx, list) {
+            for (const p of list) { ctx.globalAlpha = Math.max(0, Math.min(1, p.life / .5)); ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); }
+            ctx.globalAlpha = 1;
+        }
+        // Press-and-hold buttons (repeat while held)
+        function bindHold(btn, fn, repeatMs = 0) {
+            let timer = null;
+            const start = e => { e.preventDefault(); getAudio(); btn.classList.add('pressed'); fn(); if (repeatMs) { clearInterval(timer); timer = setInterval(fn, repeatMs); } };
+            const end = () => { btn.classList.remove('pressed'); clearInterval(timer); timer = null; };
+            btn.addEventListener('pointerdown', start);
+            ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => btn.addEventListener(ev, end));
+        }
+
+        // =====================================================================
+        //  MOON ROVER RESCUE MAZE
+        // =====================================================================
+        const mzCanvas = document.getElementById('maze-canvas'), mzCtx = mzCanvas.getContext('2d'), MZ_S = 560;
+        const DX = [0, 1, 0, -1], DY = [-1, 0, 1, 0], OPP = [2, 3, 0, 1];
+        const MZ_DIFF = {
+            easy:   { croc: 0, step: 0,   chase: 0,   braid: .5 },
+            medium: { croc: 1, step: 760, chase: .45, braid: .35 },
+            hard:   { croc: 1, step: 500, chase: .75, braid: .25 }
+        };
+        let M = null, mzDiff = 'medium', mzRaf = null, mzLast = 0;
+
+        function mazeNewGame() { M = { level: 1, lives: 3 }; mazeStartLevel(); }
+        function mazeStartLevel() {
+            const n = Math.min(14, 5 + M.level * 2), cfg = MZ_DIFF[mzDiff];
+            Object.assign(M, { n, c: MZ_S / n, collected: 0, done: false, shake: 0, invuln: 0, parts: [], trail: [], start: performance.now(), lastDenToast: 0 });
+            M.walls = mazeGenerate(n, cfg.braid);
+            M.player = { x: 0, y: 0, rx: 0, ry: 0, face: 1, queue: null, run: null };
+            M.den = { x: n - 1, y: n - 1 };
+            M.cubs = mazePlaceCubs(Math.min(6, 2 + M.level));
+            const crocCount = cfg.croc ? (mzDiff === 'hard' && M.level >= 3 ? 2 : 1) : 0;
+            const spawns = [{ x: n - 1, y: 0 }, { x: 0, y: n - 1 }];
+            M.crocs = spawns.slice(0, crocCount).map(s => ({ x: s.x, y: s.y, rx: s.x, ry: s.y, px: -1, py: -1, timer: -1500, spawn: s }));
+            mazeBuildBackground(); mazeHud(); mazeStart();
+        }
+        function mazeGenerate(n, braid) {
+            const walls = Array.from({ length: n * n }, () => [true, true, true, true]);
+            const visited = new Array(n * n).fill(false), stack = [0]; visited[0] = true;
+            while (stack.length) {
+                const cur = stack[stack.length - 1], x = cur % n, y = Math.floor(cur / n);
+                const opts = [0, 1, 2, 3].filter(d => { const nx = x + DX[d], ny = y + DY[d]; return nx >= 0 && ny >= 0 && nx < n && ny < n && !visited[ny * n + nx]; });
+                if (!opts.length) { stack.pop(); continue; }
+                const d = pick(opts), nxt = (y + DY[d]) * n + (x + DX[d]);
+                walls[cur][d] = false; walls[nxt][OPP[d]] = false; visited[nxt] = true; stack.push(nxt);
+            }
+            // Knock out some dead ends so there are loops to escape the dust storm
+            for (let i = 0; i < n * n; i++) {
+                const x = i % n, y = Math.floor(i / n);
+                if (walls[i].filter(Boolean).length === 3 && Math.random() < braid) {
+                    const opts = [0, 1, 2, 3].filter(d => { const nx = x + DX[d], ny = y + DY[d]; return walls[i][d] && nx >= 0 && ny >= 0 && nx < n && ny < n; });
+                    if (opts.length) { const d = pick(opts); walls[i][d] = false; walls[(y + DY[d]) * n + x + DX[d]][OPP[d]] = false; }
+                }
+            }
+            return walls;
+        }
+        const mzOpen = (x, y, d) => !M.walls[y * M.n + x][d];
+        const mzOpenings = (x, y) => [0, 1, 2, 3].filter(d => mzOpen(x, y, d));
+        function mazeDistances(sx, sy) {
+            const dist = new Array(M.n * M.n).fill(-1), q = [[sx, sy]]; dist[sy * M.n + sx] = 0;
+            while (q.length) {
+                const [x, y] = q.shift();
+                for (const d of mzOpenings(x, y)) {
+                    const nx = x + DX[d], ny = y + DY[d], k = ny * M.n + nx;
+                    if (dist[k] < 0) { dist[k] = dist[y * M.n + x] + 1; q.push([nx, ny]); }
+                }
+            }
+            return dist;
+        }
+        function mazePlaceCubs(count) {
+            const n = M.n, dist = mazeDistances(0, 0), cells = [];
+            for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+                if ((x === 0 && y === 0) || (x === n - 1 && y === n - 1) || dist[y * n + x] < 3) continue;
+                cells.push({ x, y, dead: mzOpenings(x, y).length === 1 });
+            }
+            const ordered = [...shuffle(cells.filter(c => c.dead)), ...shuffle(cells.filter(c => !c.dead))];
+            return ordered.slice(0, count).map(c => ({ x: c.x, y: c.y, got: false, phase: Math.random() * 6 }));
+        }
+        function mazeBuildBackground() {
+            const bg = document.createElement('canvas'); bg.width = bg.height = MZ_S;
+            const ctx = bg.getContext('2d'), n = M.n, c = M.c;
+            ctx.fillStyle = '#A9A6B4'; ctx.fillRect(0, 0, MZ_S, MZ_S);
+            for (let i = 0; i < 380; i++) { ctx.fillStyle = `rgba(60,58,75,${.06 + Math.random() * .12})`; ctx.beginPath(); ctx.arc(Math.random() * MZ_S, Math.random() * MZ_S, 1 + Math.random() * 2.5, 0, Math.PI * 2); ctx.fill(); }
+            for (let i = 0; i < 22; i++) {   // craters
+                const x = Math.random() * MZ_S, y = Math.random() * MZ_S, r = 6 + Math.random() * c * .35;
+                ctx.fillStyle = 'rgba(70,66,90,.25)'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r, Math.PI * .9, Math.PI * 1.8); ctx.stroke();
+            }
+            ctx.beginPath();
+            for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+                const w = M.walls[y * n + x], px = x * c, py = y * c;
+                if (w[0]) { ctx.moveTo(px, py); ctx.lineTo(px + c, py); }
+                if (w[3]) { ctx.moveTo(px, py); ctx.lineTo(px, py + c); }
+                if (x === n - 1 && w[1]) { ctx.moveTo(px + c, py); ctx.lineTo(px + c, py + c); }
+                if (y === n - 1 && w[2]) { ctx.moveTo(px, py + c); ctx.lineTo(px + c, py + c); }
+            }
+            ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            ctx.strokeStyle = '#2E2A4F'; ctx.lineWidth = c * .26; ctx.stroke();
+            ctx.strokeStyle = '#5B5680'; ctx.lineWidth = c * .17; ctx.stroke();
+            ctx.save(); ctx.translate(-c * .025, -c * .025); ctx.strokeStyle = 'rgba(210,205,240,.5)'; ctx.lineWidth = c * .05; ctx.stroke(); ctx.restore();
+            M.bg = bg;
+        }
+        function mazeHud() {
+            const sec = M.done && M.finishSecs != null ? M.finishSecs : Math.floor((performance.now() - M.start) / 1000);
+            document.getElementById('mz-level').innerText = `Level ${M.level}`;
+            document.getElementById('mz-cubs').innerText = `🪨 ${M.collected}/${M.cubs.length}`;
+            document.getElementById('mz-lives').innerText = '❤️'.repeat(M.lives) + '🤍'.repeat(3 - M.lives);
+            document.getElementById('mz-time').innerText = `⏱️ ${sec}s`;
+            document.querySelectorAll('#maze-diff .chip').forEach(b => b.classList.toggle('active', b.dataset.diff === mzDiff));
+        }
+        function mazeTry(d) {
+            const p = M && M.player;
+            if (!p || M.done) return;
+            if (p.rx !== p.x || p.ry !== p.y) { p.queue = d; return; }
+            if (!mzOpen(p.x, p.y, d)) { p.run = null; return; }
+            M.trail.push({ x: p.x, y: p.y, d, t: performance.now() }); if (M.trail.length > 16) M.trail.shift();
+            p.x += DX[d]; p.y += DY[d]; if (DX[d]) p.face = DX[d];
+            mazeArrive();
+        }
+        function mazeArrive() {
+            const p = M.player, now = performance.now();
+            const rock = M.cubs.find(e => !e.got && e.x === p.x && e.y === p.y);
+            if (rock) {
+                rock.got = true; M.collected++; playSound('collect');
+                spawnBurst(M.parts, (p.x + .5) * M.c, (p.y + .5) * M.c, ['#FFE082', '#FFFFFF', '#B39DDB', '#FFC233'], 18, 180);
+                if (M.collected === M.cubs.length) toast('All samples collected! Back to the lander! 🛸');
+                else toast(pick(['Sample collected! 🪨', 'Ooh, a shiny one! ✨', 'Into the box it goes! 📦']), 1100);
+                mazeHud();
+            }
+            if (p.x === M.den.x && p.y === M.den.y) {
+                if (M.collected === M.cubs.length) mazeLevelDone();
+                else if (now - M.lastDenToast > 2500) { M.lastDenToast = now; const left = M.cubs.length - M.collected; toast(`Collect ${left} more sample${left > 1 ? 's' : ''} first! 🪨`); }
+            }
+        }
+        function mazeLevelDone() {
+            M.done = true; M.player.run = null; M.player.queue = null;
+            const secs = Math.max(1, Math.round((performance.now() - M.start) / 1000)); M.finishSecs = secs;
+            const stars = secs <= M.n * 2.5 ? 3 : secs <= M.n * 4.5 ? 2 : 1;
+            playSound('win'); celebrate(180); mazeHud();
+            setTimeout(() => showWinOverlay('🛸 MISSION COMPLETE!', `You brought all ${M.cubs.length} moon rocks back in ${secs} second${secs === 1 ? '' : 's'}!\n${'⭐'.repeat(stars)}`, () => { M.level++; mazeStartLevel(); }, null, 'Next Level ➜'), 700);
+        }
+        function mazeCaught() {
+            M.lives--; playSound('storm'); M.shake = 16; if (navigator.vibrate) navigator.vibrate(250);
+            spawnBurst(M.parts, (M.player.rx + .5) * M.c, (M.player.ry + .5) * M.c, ['#C9B79C', '#8D8A84', '#ffffff'], 22, 220);
+            if (M.lives <= 0) {
+                M.done = true; M.finishSecs = Math.round((performance.now() - M.start) / 1000); mazeHud();
+                setTimeout(() => showWinOverlay('🌪️ WHOOSH!', `The dust storm caught the rover!\nYou reached level ${M.level}. Have another go!`, () => mazeNewGame(), null, 'Try Again'), 700);
+                return;
+            }
+            toast('Dust storm! Back to the start! 🌪️');
+            Object.assign(M.player, { x: 0, y: 0, rx: 0, ry: 0, queue: null, run: null });
+            M.invuln = performance.now() + 1800;
+            M.crocs.forEach(r => Object.assign(r, { x: r.spawn.x, y: r.spawn.y, rx: r.spawn.x, ry: r.spawn.y, px: -1, py: -1, timer: -1200 }));
+            mazeHud();
+        }
+        function mazeCrocStep(r) {
+            const opts = mzOpenings(r.x, r.y);
+            let d;
+            if (Math.random() < MZ_DIFF[mzDiff].chase) {
+                const dist = mazeDistances(M.player.x, M.player.y);
+                d = opts.reduce((best, o) => dist[(r.y + DY[o]) * M.n + r.x + DX[o]] < dist[(r.y + DY[best]) * M.n + r.x + DX[best]] ? o : best, opts[0]);
+            } else {
+                const fwd = opts.filter(o => !(r.x + DX[o] === r.px && r.y + DY[o] === r.py));
+                d = pick(fwd.length ? fwd : opts);
+            }
+            r.px = r.x; r.py = r.y; r.x += DX[d]; r.y += DY[d];
+        }
+        const approach = (v, target, step) => v < target ? Math.min(target, v + step) : Math.max(target, v - step);
+        function mazeUpdate(dt, now) {
+            const p = M.player;
+            M.parts = updateParticles(M.parts, dt);
+            M.shake = Math.max(0, M.shake - 60 * dt);
+            if (M.done) return;
+            p.rx = approach(p.rx, p.x, 8 * dt); p.ry = approach(p.ry, p.y, 8 * dt);
+            if (p.rx === p.x && p.ry === p.y) {
+                if (p.queue != null) { const q = p.queue; p.queue = null; mazeTry(q); }
+                else if (p.run != null) {
+                    const opens = mzOpenings(p.x, p.y);
+                    if (opens.length > 2 && !p.runFirst) p.run = null;            // stop at junctions
+                    else if (mzOpen(p.x, p.y, p.run)) { p.runFirst = false; mazeTry(p.run); }
+                    else if (opens.length === 2) {                                // follow bends in the corridor
+                        const turn = opens.find(o => o !== OPP[p.run]);
+                        if (turn != null) { p.run = turn; p.runFirst = false; mazeTry(turn); } else p.run = null;
+                    } else p.run = null;
+                }
+            }
+            const step = MZ_DIFF[mzDiff].step;
+            for (const r of M.crocs) {
+                r.timer += dt * 1000;
+                if (r.timer >= step) { r.timer = 0; mazeCrocStep(r); }
+                const sp = 1000 / step * dt;
+                r.rx = approach(r.rx, r.x, sp); r.ry = approach(r.ry, r.y, sp);
+                if (now > M.invuln && Math.hypot(r.rx - p.rx, r.ry - p.ry) < .6) { mazeCaught(); break; }
+            }
+        }
+        function drawRover(ctx, x, y, s, face, alpha = 1, rocks = 0) {
+            ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.scale(face < 0 ? -s : s, s);
+            // solar panel and mast
+            ctx.fillStyle = '#2B3F8F'; ctx.fillRect(-.42, -.2, .5, .08);
+            ctx.strokeStyle = '#ECECEC'; ctx.lineWidth = .05; ctx.beginPath(); ctx.moveTo(.22, -.08); ctx.lineTo(.22, -.38); ctx.stroke();
+            ctx.fillStyle = '#ECECEC'; ctx.fillRect(.14, -.46, .18, .1); ctx.fillStyle = '#1A1A1A'; ctx.fillRect(.28, -.43, .05, .05);
+            // body
+            ctx.fillStyle = '#F5F5F5'; roundRect(ctx, -.38, -.12, .72, .24, .06); ctx.fill();
+            ctx.fillStyle = '#E6B84A'; ctx.fillRect(-.36, -.04, .68, .06);
+            for (let i = 0; i < Math.min(rocks, 4); i++) { ctx.fillStyle = '#7B7590'; ctx.beginPath(); ctx.arc(-.28 + i * .12, -.15, .05, 0, Math.PI * 2); ctx.fill(); }
+            // wheels
+            ctx.fillStyle = '#333'; [-.28, 0, .26].forEach(wx => { ctx.beginPath(); ctx.arc(wx, .16, .1, 0, Math.PI * 2); ctx.fill(); });
+            ctx.fillStyle = '#999'; [-.28, 0, .26].forEach(wx => { ctx.beginPath(); ctx.arc(wx, .16, .035, 0, Math.PI * 2); ctx.fill(); });
+            ctx.restore();
+        }
+        function drawLander(ctx, x, y, c, open, t) {
+            if (open) {
+                const g = ctx.createRadialGradient(x, y, 2, x, y, c * .7); g.addColorStop(0, `rgba(255,214,79,${.55 + .25 * Math.sin(t * 6)})`); g.addColorStop(1, 'rgba(255,214,79,0)');
+                ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, c * .7, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.save(); ctx.translate(x, y); ctx.scale(c, c); ctx.globalAlpha = open ? 1 : .85;
+            ctx.strokeStyle = '#C9C5D6'; ctx.lineWidth = .04;
+            ctx.beginPath(); ctx.moveTo(-.2, .05); ctx.lineTo(-.36, .34); ctx.moveTo(.2, .05); ctx.lineTo(.36, .34); ctx.moveTo(-.08, .1); ctx.lineTo(-.14, .34); ctx.moveTo(.08, .1); ctx.lineTo(.14, .34); ctx.stroke();
+            ctx.fillStyle = '#E6B84A'; ctx.beginPath(); ctx.moveTo(-.26, -.02); ctx.lineTo(.26, -.02); ctx.lineTo(.2, .14); ctx.lineTo(-.2, .14); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#D9D6E3'; roundRect(ctx, -.16, -.3, .32, .28, .05); ctx.fill();
+            ctx.fillStyle = '#1B1F4B'; roundRect(ctx, -.08, -.24, .16, .1, .03); ctx.fill();
+            ctx.restore();
+        }
+        function mazeDraw(now) {
+            const ctx = mzCtx, c = M.c, t = now / 1000;
+            ctx.save();
+            if (M.shake) ctx.translate((Math.random() - .5) * M.shake, (Math.random() - .5) * M.shake);
+            ctx.drawImage(M.bg, 0, 0);
+            // tyre tracks
+            for (const f of M.trail) {
+                const age = (now - f.t) / 2500; if (age > 1) continue;
+                ctx.fillStyle = `rgba(60,56,80,${.35 * (1 - age)})`;
+                const cx = (f.x + .5) * c, cy = (f.y + .5) * c, horiz = f.d === 1 || f.d === 3;
+                for (let k = -1; k <= 1; k += 2) horiz ? ctx.fillRect(cx - c * .3, cy + k * c * .12 - 2, c * .6, 4) : ctx.fillRect(cx + k * c * .12 - 2, cy - c * .3, 4, c * .6);
+            }
+            // lander
+            const lx = (M.den.x + .5) * c, ly = (M.den.y + .5) * c, open = M.collected === M.cubs.length;
+            drawLander(ctx, lx, ly, c, open, t);
+            if (!open) drawEmoji(ctx, '🔒', lx + c * .3, ly - c * .3, c * .26);
+            // moon rocks waiting to be collected
+            for (const e of M.cubs) if (!e.got) {
+                const cx = (e.x + .5) * c, cy = (e.y + .55) * c + Math.sin(t * 3 + e.phase) * c * .04;
+                drawEmoji(ctx, '🪨', cx, cy, c * .48);
+                drawEmoji(ctx, '✨', cx + c * .24, cy - c * .26, c * .22, false, .5 + .5 * Math.sin(t * 4 + e.phase));
+            }
+            // the rover
+            const p = M.player, blink = now < M.invuln && Math.floor(now / 120) % 2 === 0;
+            if (!(M.done && M.lives > 0)) {
+                const bump = (p.rx !== p.x || p.ry !== p.y) ? Math.abs(Math.sin(t * 20)) * c * .03 : 0;
+                ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.beginPath(); ctx.ellipse((p.rx + .5) * c, (p.ry + .74) * c, c * .32, c * .07, 0, 0, Math.PI * 2); ctx.fill();
+                drawRover(ctx, (p.rx + .5) * c, (p.ry + .5) * c - bump, c * .95, p.face, blink ? .3 : 1, M.collected);
+            }
+            // dust storms
+            for (const r of M.crocs) {
+                const near = Math.abs(r.x - p.x) + Math.abs(r.y - p.y) <= 3;
+                const sx = (r.rx + .5) * c, sy = (r.ry + .5) * c;
+                ctx.fillStyle = 'rgba(200,180,150,.25)'; ctx.beginPath(); ctx.arc(sx, sy, c * (.5 + .06 * Math.sin(t * 8)), 0, Math.PI * 2); ctx.fill();
+                ctx.save(); ctx.translate(sx, sy); ctx.rotate(Math.sin(t * 6) * .2); drawEmoji(ctx, '🌪️', 0, 0, c * .85); ctx.restore();
+                if (near && !M.done) drawEmoji(ctx, '❗', sx, (r.ry - .1) * c, c * .35, false, .6 + .4 * Math.sin(t * 12));
+            }
+            drawParticles(ctx, M.parts);
+            if (!M.done && M.crocs.some(r => Math.abs(r.x - p.x) + Math.abs(r.y - p.y) <= 2)) {
+                const g = ctx.createRadialGradient(MZ_S / 2, MZ_S / 2, MZ_S * .35, MZ_S / 2, MZ_S / 2, MZ_S * .75);
+                g.addColorStop(0, 'rgba(198,40,40,0)'); g.addColorStop(1, `rgba(198,40,40,${.25 + .1 * Math.sin(t * 10)})`);
+                ctx.fillStyle = g; ctx.fillRect(0, 0, MZ_S, MZ_S);
+            }
+            ctx.restore();
+        }
+        let mzHudTimer = 0;
+        function mazeFrame(now) {
+            const dt = Math.min(.05, (now - mzLast) / 1000); mzLast = now;
+            mazeUpdate(dt, now); mazeDraw(now);
+            mzHudTimer += dt; if (mzHudTimer > .25) { mzHudTimer = 0; if (!M.done) mazeHud(); }
+            mzRaf = requestAnimationFrame(mazeFrame);
+        }
+        function mazeStart() { cancelAnimationFrame(mzRaf); mzLast = performance.now(); mzRaf = requestAnimationFrame(mazeFrame); }
+        function mazeStop() { cancelAnimationFrame(mzRaf); mzRaf = null; }
+
+        document.querySelectorAll('.d-pad .d-btn').forEach(b => bindHold(b, () => { if (M) { M.player.run = null; mazeTry(+b.dataset.dir); } }, 170));
+        document.getElementById('maze-new').onclick = () => { M.lives = 3; mazeStartLevel(); };
+        document.getElementById('maze-diff').addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) { mzDiff = c.dataset.diff; mazeNewGame(); } });
+        (function mazeTouch() {
+            let sx = 0, sy = 0;
+            mzCanvas.addEventListener('pointerdown', e => { e.preventDefault(); getAudio(); sx = e.clientX; sy = e.clientY; });
+            mzCanvas.addEventListener('pointerup', e => {
+                if (!M || M.done) return;
+                let dx = e.clientX - sx, dy = e.clientY - sy;
+                if (Math.hypot(dx, dy) < 20) {                     // a tap: drive towards the tapped spot
+                    const box = mzCanvas.getBoundingClientRect(), scale = MZ_S / box.width;
+                    dx = (e.clientX - box.left) * scale - (M.player.rx + .5) * M.c;
+                    dy = (e.clientY - box.top) * scale - (M.player.ry + .5) * M.c;
+                    if (Math.hypot(dx, dy) < M.c * .4) return;
+                }
+                const d = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0);
+                M.player.run = d; M.player.runFirst = true; mazeTry(d);
+            });
+        })();
+
+        // =====================================================================
+        //  ASTEROID DASH
+        // =====================================================================
+        const dsCanvas = document.getElementById('dash-canvas'), dsCtx = dsCanvas.getContext('2d');
+        const DW = 400, DH = 600, LANE_X = [100, 200, 300], JEEP_Y = 450;
+        const DASH_STARS = Array.from({ length: 90 }, () => ({ x: Math.random() * DW, y: Math.random() * DH, r: .5 + Math.random() * 1.8, s: .3 + Math.random() * .9 }));
+        const VERGE_THINGS = ['🪐', '🌑', '✨', '🌍', '🌕', '✨', '⭐'];
+        let D = null, dsRaf = null, dsLast = 0, dsBest = storageGet('asteroidDashBest', 0);
+
+        function dashReset() {
+            D = { running: false, over: false, lane: 1, x: 200, z: 0, jumpT: -1, tilt: 0, objs: [], parts: [], speed: 4.2, dist: 0, fuel: 0, fuelStreak: 0,
+                  hits: 0, rhinoY: DH + 50, rhinoX: 200, shieldUntil: 0, invulnUntil: 0, turboUntil: 0, nextSpawn: 420, shake: 0, time: 0, scroll: 0, msg: '', msgUntil: 0,
+                  verge: Array.from({ length: 8 }, (_, i) => ({ side: i % 2, y: Math.floor(i / 2) * 160 - 40 + Math.random() * 60, e: pick(VERGE_THINGS) })) };
+            document.getElementById('dash-best').innerText = dsBest ? `🏆 Best: ${dsBest} km` : '';
+        }
+        function dashEnter() { if (!D || D.over) dashReset(); document.getElementById('dash-start').style.display = D.running ? 'none' : 'inline-block'; dashLoopStart(); }
+        function dashStart() {
+            getAudio(); dashReset(); D.running = true;
+            document.getElementById('dash-start').style.display = 'none';
+            playSound('hole'); dashMsg('3... 2... 1... BLAST OFF! 🚀');
+            dashLoopStart();
+        }
+        function dashStop() {
+            cancelAnimationFrame(dsRaf); dsRaf = null;
+            if (D && D.running) { D.running = false; document.getElementById('dash-start').innerText = '▶️ Blast Off'; }
+        }
+        function dashLoopStart() { cancelAnimationFrame(dsRaf); dsLast = performance.now(); dsRaf = requestAnimationFrame(dashFrame); }
+        function dashFrame(now) {
+            const dt = Math.min(.05, (now - dsLast) / 1000); dsLast = now;
+            dashUpdate(dt, now); dashDraw(now);
+            dsRaf = requestAnimationFrame(dashFrame);
+        }
+        function dashMsg(text, ms = 1600) { D.msg = text; D.msgUntil = performance.now() + ms; }
+        function dashMove(dir) { if (!D || !D.running) return; const nl = Math.max(0, Math.min(2, D.lane + dir)); if (nl !== D.lane) { D.lane = nl; playSound('flip'); } }
+        function dashJump() { if (!D || !D.running || D.jumpT >= 0) return; D.jumpT = 0; playSound('jump'); }
+
+        function dashSpawnRow(now) {
+            const y = -70, r = Math.random();
+            if (D.dist > 1800 && r < .13) {
+                const fromLeft = Math.random() < .5;
+                D.objs.push({ type: 'crossing', e: pick(['🛸', '🛰️']), x: fromLeft ? -40 : DW + 40, y, vx: (fromLeft ? 1 : -1) * (1.1 + Math.random() * .7), h: 56 });
+                return;
+            }
+            if (D.dist > 3500 && r < .24) { D.objs.push({ type: 'falling', x: pick(LANE_X), y, t: 1.2, T: 1.2, h: 48 }); return; }
+            const lanes = shuffle([0, 1, 2]), blocked = Math.random() < Math.min(.55, .2 + D.dist / 20000) ? 2 : 1;
+            for (let i = 0; i < blocked; i++) {
+                const type = pick(['rock', 'rock', 'junk', 'dust']);
+                D.objs.push({ type, x: LANE_X[lanes[i]], y, h: type === 'junk' ? 34 : type === 'dust' ? 40 : 52, seed: Math.random() });
+            }
+            const rr = Math.random();
+            if (rr < .45) D.objs.push({ type: 'fuel', x: LANE_X[lanes[blocked]], y, h: 40 });
+            else if (rr < .53 && now > D.shieldUntil) D.objs.push({ type: 'star', x: LANE_X[lanes[blocked]], y, h: 40 });
+        }
+        function dashHit(o, now) {
+            if (now < D.shieldUntil) {
+                o.dead = true; playSound('crash'); D.shake = 6;
+                spawnBurst(D.parts, o.x, o.y, ['#7FDBFF', '#ffffff', '#8D8A84'], 16, 220); dashMsg('FORCE FIELD SMASH! 💥', 900); return;
+            }
+            if (now < D.invulnUntil) return;
+            o.dead = true; D.hits++; D.invulnUntil = now + 1600; D.shake = 16; D.fuelStreak = 0;
+            playSound('crash'); setTimeout(() => playSound('hole'), 120);
+            if (navigator.vibrate) navigator.vibrate(200);
+            spawnBurst(D.parts, D.x, JEEP_Y - 20, ['#8D8A84', '#FF7A1A', '#FFC233', '#B39DDB'], 22, 240);
+            if (D.hits >= 3) { dashGameOver(); return; }
+            dashMsg(D.hits === 1 ? 'Bump! The black hole is pulling closer!' : 'Uh oh! The black hole is RIGHT behind you!');
+        }
+        function dashGameOver() {
+            D.running = false; D.over = true;
+            const m = Math.floor(D.dist / 20), newBest = m > dsBest;
+            if (newBest) { dsBest = m; storageSet('asteroidDashBest', m); }
+            setTimeout(() => {
+                if (currentScreen !== 'dash') return;
+                showWinOverlay('🕳️ SLURP!', `You flew ${m} km and collected ${D.fuel} fuel cell${D.fuel === 1 ? '' : 's'}!\n${newBest ? '🏆 NEW BEST SCORE! 🏆' : `🏆 Best: ${dsBest} km`}`, dashStart, null, 'Fly Again 🚀');
+                if (newBest) celebrate(200);
+            }, 900);
+        }
+        function dashUpdate(dt, now) {
+            const k = dt * 60;
+            D.time += dt;
+            D.parts = updateParticles(D.parts, dt, 0);
+            D.shake = Math.max(0, D.shake - 50 * dt);
+            if (!D.running) {
+                if (D.over) { D.rhinoY += (JEEP_Y + 10 - D.rhinoY) * Math.min(1, 6 * dt); D.rhinoX += (D.x - D.rhinoX) * Math.min(1, 6 * dt); }
+                return;
+            }
+            const turbo = now < D.turboUntil;
+            D.speed = Math.min(11, 4.2 + D.dist / 5000);
+            const v = (turbo ? D.speed * 1.35 : D.speed) * k;
+            D.dist += v; D.scroll = (D.scroll + v) % DH;
+            for (const it of D.verge) { it.y += v * .5; if (it.y > DH + 40) { it.y -= DH + 160; it.e = pick(VERGE_THINGS); } }
+            // rocket
+            const tx = LANE_X[D.lane]; D.tilt = (tx - D.x) * .004; D.x += (tx - D.x) * Math.min(1, 12 * dt);
+            if (D.jumpT >= 0) {
+                D.jumpT += dt; const T = .7; D.z = Math.sin(Math.PI * Math.min(1, D.jumpT / T));
+                if (D.jumpT >= T) { D.jumpT = -1; D.z = 0; spawnBurst(D.parts, D.x, JEEP_Y, ['#B39DDB', '#7FDBFF', '#FFFFFF'], 10, 90); }
+            }
+            // rocket exhaust
+            if (Math.random() < .9 * k) D.parts.push({ x: D.x + (Math.random() - .5) * 12, y: JEEP_Y + 48, vx: (Math.random() - .5) * 30, vy: 120 + Math.random() * 80, life: turbo ? .45 : .3, r: 3 + Math.random() * 4, c: pick(['#FFC233', '#FF7A1A', '#FFF59D']) });
+            // spawning
+            if (D.dist >= D.nextSpawn) { dashSpawnRow(now); D.nextSpawn = D.dist + Math.max(190, 330 - D.speed * 12) + Math.random() * 90; }
+            // objects
+            for (const o of D.objs) {
+                o.y += v;
+                if (o.type === 'crossing') o.x += o.vx * k;
+                if (o.type === 'falling') {
+                    o.t -= dt;
+                    if (o.t <= 0) { o.type = 'rock'; o.seed = Math.random(); D.shake = Math.max(D.shake, 5); playSound('crash'); spawnBurst(D.parts, o.x, o.y, ['#FF7A1A', '#FFFFFF', '#FFC233'], 14, 180); }
+                    continue;
+                }
+                const dx = Math.abs(o.x - D.x), dy = Math.abs(o.y - JEEP_Y);
+                if (o.type === 'fuel' && dx < 46 && dy < 52) {
+                    o.dead = true; D.fuel++; D.fuelStreak++; playSound('collect');
+                    spawnBurst(D.parts, o.x, o.y, ['#4FC3F7', '#ffffff', '#69F0AE'], 14, 160);
+                    if (D.fuelStreak >= 3) {
+                        D.fuelStreak = 0; D.turboUntil = now + 2500;
+                        if (D.hits > 0) { D.hits--; dashMsg('TURBO! You escaped the pull! 🔥'); } else dashMsg('TURBO BOOST! 🔥', 1200);
+                    }
+                } else if (o.type === 'star' && dx < 46 && dy < 52) {
+                    o.dead = true; D.shieldUntil = now + 6000; playSound('win'); dashMsg('FORCE FIELD! ⭐');
+                } else if (['rock', 'junk', 'dust', 'crossing'].includes(o.type) && dx < (o.type === 'crossing' ? 52 : 46) && dy < o.h / 2 + 36 && D.z < .35) {
+                    dashHit(o, now); if (!D.running) break;
+                }
+            }
+            D.objs = D.objs.filter(o => !o.dead && o.y < DH + 90 && o.x > -80 && o.x < DW + 80);
+            D.rhinoY += (DH + 50 - D.hits * 60 + (turbo ? 40 : 0) - D.rhinoY) * Math.min(1, 3 * dt);
+            D.rhinoX += (D.x - D.rhinoX) * Math.min(1, 2.5 * dt);
+        }
+        function drawRocket(ctx, x, y, z, tilt, alpha, shielded, t) {
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.translate(x, y - z * 20); ctx.rotate(tilt); ctx.scale(1 + z * .45, 1 + z * .45);
+            if (z > .05) { ctx.strokeStyle = `rgba(179,157,219,${z})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, 56, t * 8, t * 8 + 4); ctx.stroke(); }
+            // flame
+            const fl = 26 + Math.sin(t * 40) * 6;
+            ctx.fillStyle = '#FF7A1A'; ctx.beginPath(); ctx.moveTo(-10, 30); ctx.quadraticCurveTo(0, 30 + fl * 1.6, 10, 30); ctx.fill();
+            ctx.fillStyle = '#FFF59D'; ctx.beginPath(); ctx.moveTo(-5, 30); ctx.quadraticCurveTo(0, 30 + fl, 5, 30); ctx.fill();
+            // fins
+            ctx.fillStyle = '#C62828';
+            ctx.beginPath(); ctx.moveTo(-14, 6); ctx.lineTo(-30, 34); ctx.lineTo(-12, 28); ctx.closePath(); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(14, 6); ctx.lineTo(30, 34); ctx.lineTo(12, 28); ctx.closePath(); ctx.fill();
+            // body
+            ctx.fillStyle = '#F2F2F7'; ctx.strokeStyle = '#5A5680'; ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.moveTo(0, -46); ctx.bezierCurveTo(20, -28, 16, 10, 14, 32); ctx.lineTo(-14, 32); ctx.bezierCurveTo(-16, 10, -20, -28, 0, -46); ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#C62828'; ctx.beginPath(); ctx.moveTo(0, -46); ctx.bezierCurveTo(9, -38, 13, -30, 14.5, -24); ctx.lineTo(-14.5, -24); ctx.bezierCurveTo(-13, -30, -9, -38, 0, -46); ctx.fill();
+            ctx.fillStyle = '#4FC3F7'; ctx.strokeStyle = '#5A5680'; ctx.beginPath(); ctx.arc(0, -6, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.beginPath(); ctx.arc(-2.5, -8.5, 2.5, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+            if (shielded) {
+                ctx.save(); ctx.translate(x, y - z * 20);
+                ctx.fillStyle = 'rgba(120,220,255,.15)'; ctx.strokeStyle = `rgba(120,220,255,${.6 + .3 * Math.sin(t * 10)})`; ctx.lineWidth = 4;
+                ctx.beginPath(); ctx.arc(0, 0, 64, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.restore();
+            }
+        }
+        function drawFuelCell(ctx, x, y) {
+            ctx.save(); ctx.translate(x, y); ctx.rotate(-.12);
+            roundRect(ctx, -12, -18, 24, 36, 6); ctx.fillStyle = '#1E88E5'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#0D47A1'; ctx.stroke();
+            ctx.fillStyle = '#0D47A1'; ctx.fillRect(-5, -24, 10, 6);
+            ctx.fillStyle = '#69F0AE'; roundRect(ctx, -7, -10, 14, 22, 3); ctx.fill();
+            ctx.fillStyle = '#0D47A1'; ctx.beginPath(); ctx.moveTo(2, -8); ctx.lineTo(-4, 2); ctx.lineTo(1, 2); ctx.lineTo(-2, 10); ctx.lineTo(5, -1); ctx.lineTo(0, -1); ctx.closePath(); ctx.fill();
+            ctx.restore();
+        }
+        function drawObstacle(ctx, o, t) {
+            ctx.save(); ctx.translate(o.x, o.y);
+            if (o.type === 'rock') {
+                ctx.rotate(t * (o.seed - .5) * 2);
+                const pts = [[-32, 10], [-26, -14], [-8, -26], [14, -22], [30, -6], [28, 14], [6, 24], [-20, 20]];
+                ctx.beginPath(); pts.forEach(([px, py], i) => i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)); ctx.closePath();
+                ctx.fillStyle = '#8C8478'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#4E473E'; ctx.stroke();
+                ctx.fillStyle = '#6E675C'; [[-10, -6, 7], [12, 6, 5], [-4, 12, 4]].forEach(([cx, cy, r]) => { ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill(); });
+                ctx.fillStyle = 'rgba(255,255,255,.2)'; ctx.beginPath(); ctx.moveTo(-22, -10); ctx.lineTo(-6, -21); ctx.lineTo(8, -18); ctx.lineTo(-10, -8); ctx.closePath(); ctx.fill();
+            } else if (o.type === 'junk') {
+                ctx.rotate(Math.sin(t * 2 + o.seed * 6) * .4);
+                ctx.fillStyle = '#3F5FBF'; ctx.fillRect(-46, -10, 30, 20); ctx.fillRect(16, -10, 30, 20);
+                ctx.strokeStyle = 'rgba(255,255,255,.4)'; ctx.lineWidth = 1.5; for (let i = -40; i < 46; i += 8) { if (i > -16 && i < 16) continue; ctx.beginPath(); ctx.moveTo(i, -10); ctx.lineTo(i, 10); ctx.stroke(); }
+                ctx.fillStyle = '#C9C5D6'; ctx.fillRect(-16, -2, 32, 4); roundRect(ctx, -14, -14, 28, 28, 4); ctx.fillStyle = '#E6B84A'; ctx.fill(); ctx.strokeStyle = '#8A6A20'; ctx.lineWidth = 2; ctx.stroke();
+                ctx.strokeStyle = '#C9C5D6'; ctx.beginPath(); ctx.moveTo(0, -14); ctx.lineTo(6, -26); ctx.stroke();
+            } else if (o.type === 'dust') {
+                for (let i = 0; i < 5; i++) {
+                    const a = t * 1.5 + i * 1.26 + o.seed * 6;
+                    ctx.fillStyle = `rgba(179,157,219,${.25 + .1 * Math.sin(t * 3 + i)})`; ctx.beginPath(); ctx.arc(Math.cos(a) * 16, Math.sin(a) * 9, 22, 0, Math.PI * 2); ctx.fill();
+                }
+                ctx.fillStyle = 'rgba(255,255,255,.6)'; for (let i = 0; i < 6; i++) { const a = t * 3 + i; ctx.beginPath(); ctx.arc(Math.cos(a) * 30, Math.sin(a * 1.3) * 16, 1.8, 0, Math.PI * 2); ctx.fill(); }
+            } else if (o.type === 'fuel') {
+                ctx.globalAlpha = .35 * (.6 + .4 * Math.sin(t * 6));
+                ctx.fillStyle = '#B3E5FC'; ctx.beginPath(); ctx.arc(0, 0, 32, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+                drawFuelCell(ctx, 0, Math.sin(t * 5) * 4);
+            } else if (o.type === 'star') {
+                const s = 1 + .15 * Math.sin(t * 8); ctx.scale(s, s); ctx.rotate(Math.sin(t * 3) * .3); drawEmoji(ctx, '⭐', 0, 0, 42);
+            } else if (o.type === 'crossing') {
+                drawEmoji(ctx, o.e, 0, Math.sin(t * 6) * 5, 62);
+            } else if (o.type === 'falling') {
+                const prog = 1 - o.t / o.T;
+                ctx.strokeStyle = `rgba(255,82,82,${.5 + .5 * Math.sin(t * 20)})`; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(0, 0, 14 + prog * 20, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(8, 0); ctx.moveTo(0, -8); ctx.lineTo(0, 8); ctx.stroke();
+                // the meteor streaks in from the top right
+                const mx = o.t * 160, my = -o.t * 260;
+                const g = ctx.createLinearGradient(mx, my, mx + 40, my - 60); g.addColorStop(0, 'rgba(255,200,80,.9)'); g.addColorStop(1, 'rgba(255,200,80,0)');
+                ctx.strokeStyle = g; ctx.lineWidth = 10 + prog * 6; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(mx + 40, my - 60); ctx.stroke();
+                ctx.fillStyle = '#FFE082'; ctx.beginPath(); ctx.arc(mx, my, 8 + prog * 8, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.restore();
+        }
+        function drawBlackHole(ctx, x, y, t, angry) {
+            ctx.save(); ctx.translate(x, y);
+            const glow = ctx.createRadialGradient(0, 0, 20, 0, 0, 110); glow.addColorStop(0, 'rgba(255,140,40,.55)'); glow.addColorStop(.5, 'rgba(160,60,200,.25)'); glow.addColorStop(1, 'rgba(160,60,200,0)');
+            ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(0, 0, 110, 0, Math.PI * 2); ctx.fill();
+            for (let i = 0; i < 3; i++) {   // spinning disc of glowing gas
+                ctx.save(); ctx.rotate(t * (1.5 + i * .6)); ctx.scale(1, .45);
+                ctx.strokeStyle = ['#FFC233', '#FF7A1A', '#E040FB'][i]; ctx.globalAlpha = .75; ctx.lineWidth = 6 - i;
+                ctx.beginPath(); ctx.arc(0, 0, 56 + i * 12, 0, Math.PI * 1.4); ctx.stroke(); ctx.restore();
+            }
+            ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(0, 0, 36 + (angry ? Math.sin(t * 14) * 3 : 0), 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = 'rgba(255,220,150,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 38, 0, Math.PI * 2); ctx.stroke();
+            ctx.restore();
+        }
+        function dashDraw(now) {
+            const ctx = dsCtx, t = now / 1000;
+            ctx.save();
+            if (D.shake) ctx.translate((Math.random() - .5) * D.shake, (Math.random() - .5) * D.shake);
+            ctx.fillStyle = '#070A1E'; ctx.fillRect(-20, -20, DW + 40, DH + 40);
+            ctx.fillStyle = '#fff';
+            for (const s of DASH_STARS) { ctx.globalAlpha = .4 + .5 * s.s; ctx.beginPath(); ctx.arc(s.x, (s.y + D.scroll * s.s) % DH, s.r, 0, Math.PI * 2); ctx.fill(); }
+            ctx.globalAlpha = 1;
+            for (const it of D.verge) drawEmoji(ctx, it.e, it.side ? 375 : 25, it.y, 36, false, .8);
+            // space lanes
+            ctx.fillStyle = 'rgba(106,79,201,.12)'; ctx.fillRect(50, -20, 300, DH + 40);
+            ctx.fillStyle = 'rgba(179,157,219,.5)'; ctx.fillRect(50, -20, 3, DH + 40); ctx.fillRect(347, -20, 3, DH + 40);
+            ctx.fillStyle = 'rgba(200,190,255,.35)';
+            for (let y = -80 + (D.scroll % 80); y < DH; y += 80) { roundRect(ctx, 148, y, 4, 36, 2); ctx.fill(); roundRect(ctx, 248, y, 4, 36, 2); ctx.fill(); }
+            [...D.objs].sort((a, b) => a.y - b.y).forEach(o => drawObstacle(ctx, o, t));
+            drawParticles(ctx, D.parts);
+            const blink = now < D.invulnUntil && Math.floor(now / 110) % 2 === 0;
+            drawRocket(ctx, D.x, JEEP_Y, D.z, D.tilt, blink ? .35 : 1, now < D.shieldUntil, t);
+            drawBlackHole(ctx, D.rhinoX, D.rhinoY + (D.running ? Math.sin(t * 6) * 4 : 0), t, D.hits >= 2 && D.running);
+            ctx.restore();
+
+            // HUD
+            ctx.fillStyle = 'rgba(11,16,51,.75)'; roundRect(ctx, 8, 8, DW - 16, 44, 14); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.font = `bold 21px ${getComputedStyle(document.body).fontFamily}`; ctx.textBaseline = 'middle';
+            ctx.textAlign = 'left'; ctx.fillText(`🏁 ${Math.floor(D.dist / 20)} km`, 20, 31);
+            ctx.textAlign = 'center'; ctx.fillText(`🔋 ${D.fuel}`, 200, 31);
+            ctx.textAlign = 'right'; ctx.fillText(`🕳️ ${'●'.repeat(D.hits)}${'○'.repeat(3 - D.hits)}`, DW - 20, 31);
+            if (now < D.shieldUntil) { ctx.textAlign = 'center'; ctx.fillStyle = '#7FDBFF'; ctx.fillText(`⭐ Force field ${Math.ceil((D.shieldUntil - now) / 1000)}`, DW / 2, 70); }
+            else if (now < D.turboUntil) { ctx.textAlign = 'center'; ctx.fillStyle = '#FFC233'; ctx.fillText('🔥 TURBO 🔥', DW / 2, 70); }
+            if (D.msg && now < D.msgUntil) {
+                ctx.font = `bold 20px ${getComputedStyle(document.body).fontFamily}`; ctx.textAlign = 'center';
+                const w = Math.min(DW - 16, ctx.measureText(D.msg).width + 36);
+                ctx.globalAlpha = Math.min(1, (D.msgUntil - now) / 300);
+                ctx.fillStyle = '#FFC233'; roundRect(ctx, DW / 2 - w / 2, 150, w, 44, 22); ctx.fill();
+                ctx.fillStyle = '#16123A'; ctx.fillText(D.msg, DW / 2, 173, DW - 30); ctx.globalAlpha = 1;
+            }
+            if (!D.running && !D.over) {
+                ctx.fillStyle = 'rgba(11,16,51,.66)'; ctx.fillRect(0, 0, DW, DH);
+                ctx.textAlign = 'center'; ctx.fillStyle = '#FFC233';
+                ctx.font = `44px 'Luckiest Guy', ${EMOJI_FONT}`; ctx.fillText('ASTEROID DASH', DW / 2, 170);
+                drawRocket(ctx, DW / 2 - 60, 270 + Math.sin(t * 6) * 5, 0, 0, 1, false, t);
+                ctx.save(); ctx.translate(DW / 2 + 70, 270); ctx.scale(.55, .55); drawBlackHole(ctx, 0, 0, t, false); ctx.restore();
+                ctx.fillStyle = '#fff'; ctx.font = `bold 21px ${getComputedStyle(document.body).fontFamily}`;
+                ['Escape from the black hole!', 'Warp over asteroids and space junk.', 'Collect fuel 🔋 and stars ⭐', '', 'Press BLAST OFF to go!'].forEach((line, i) => ctx.fillText(line, DW / 2, 360 + i * 32));
+            }
+        }
+        bindHold(document.getElementById('dash-left'), () => dashMove(-1));
+        bindHold(document.getElementById('dash-right'), () => dashMove(1));
+        bindHold(document.getElementById('dash-jump'), dashJump);
+        document.getElementById('dash-start').onclick = dashStart;
+        (function dashTouch() {
+            let sx = 0, sy = 0;
+            dsCanvas.addEventListener('pointerdown', e => { e.preventDefault(); sx = e.clientX; sy = e.clientY; });
+            dsCanvas.addEventListener('pointerup', e => {
+                if (!D || !D.running) return;
+                const dx = e.clientX - sx, dy = e.clientY - sy;
+                if (Math.hypot(dx, dy) < 20) { dashJump(); return; }              // tap = warp
+                if (Math.abs(dx) > Math.abs(dy)) dashMove(dx > 0 ? 1 : -1); else if (dy < 0) dashJump();
+            });
+        })();
+
+        // =====================================================================
+        //  QUIZ
+        // =====================================================================
+        const QUIZ_ROUND = 6;
+        const MADE = ['robot', 'station', 'mission', 'craft'];
+        const MOONWALKERS = ['Neil Armstrong', 'Buzz Aldrin', 'Alan Shepard'];
+        const dated = items.filter(it => MADE.includes(it.group) && it.year);
+        const QUIZ_TYPES = [
+            { weight: 3, make() { const ok = pick(items); return { text: `Can you find ${ok.name}?`, ok, isOk: it => it.id === ok.id }; } },
+            { weight: 2, make() { return { text: 'Which one is a planet? 🪐', isOk: isPlanet, isWrong: it => !['planet', 'moon', 'deep'].includes(it.group) }; } },
+            { weight: 1, make() { return { text: 'Which one is a dwarf planet? 🥔', isOk: isDwarf, isWrong: it => isPlanet(it) || (it.group === 'moon' && !/Belt/.test(it.name)) }; } },
+            { weight: 1, make() { return { text: 'Which planet is the biggest? 🔭', isOk: it => it.name === 'Jupiter', isWrong: isPlanet }; } },
+            { weight: 1, make() { return { text: 'Which planet has the biggest, brightest rings? 💍', isOk: it => it.name === 'Saturn', isWrong: it => ['Mercury', 'Venus', 'Earth', 'Mars'].includes(it.name) }; } },
+            { weight: 1, make() { return { text: 'Which one is the Red Planet? 🔴', isOk: it => it.name === 'Mars', isWrong: it => isPlanet(it) && it.name !== 'Jupiter' }; } },
+            { weight: 2, make() { return { text: 'Which one was launched by the Soviet Union? ☭', isOk: it => it.country === 'USSR' && MADE.includes(it.group), isWrong: it => MADE.includes(it.group) && !['USSR', 'Russia', 'World'].includes(it.country) }; } },
+            { weight: 1, make() { return { text: 'Which one came from the USA? 🇺🇸', isOk: it => it.country === 'USA' && MADE.includes(it.group), isWrong: it => MADE.includes(it.group) && !['USA', 'World'].includes(it.country) }; } },
+            { weight: 2, make() { return { text: 'Who walked on the Moon? 👣', isOk: it => MOONWALKERS.includes(it.name), isWrong: it => it.group === 'astronaut' && !MOONWALKERS.includes(it.name) && it.name !== 'Laika' }; } },
+            { weight: 1, make() { return { text: 'Which one is a star? ⭐', isOk: it => it.group === 'star' || it.name === 'Sun', isWrong: it => isPlanet(it) || it.group === 'moon' }; } },
+            { weight: 1, make() { return { text: 'Which one is a galaxy? 🌌', isOk: isGalaxy, isWrong: it => it.group === 'star' || isPlanet(it) }; } },
+            { weight: 1, make() { return { text: 'Which one is an astronaut? 👩‍🚀', isOk: it => it.group === 'astronaut' && it.name !== 'Laika', isWrong: it => ['robot', 'craft', 'station'].includes(it.group) }; } },
+            { weight: 1, make() { return { text: 'Which one is a robot explorer? 🤖', isOk: it => it.group === 'robot' && !/Telescope/.test(it.name), isWrong: it => ['astronaut', 'scientist'].includes(it.group) }; } },
+            { weight: 1, make() { return { text: 'Which one is a space station? 🏠', isOk: it => it.group === 'station', isWrong: it => ['robot', 'planet', 'astronaut'].includes(it.group) }; } },
+            { weight: 1, make() { return { text: "Which mission hasn't happened yet? 🔮", isOk: it => it.group === 'future', isWrong: it => it.group === 'mission' }; } },
+            { weight: 2, make() {
+                // Which came first? Three things with years far enough apart to be fair
+                for (let tries = 0; tries < 50; tries++) {
+                    const opts = shuffle(dated).slice(0, 3), ys = opts.map(o => o.year).sort((a, b) => a - b);
+                    if (ys[1] - ys[0] >= 3 && ys[2] - ys[1] >= 1) {
+                        const ok = opts.find(o => o.year === ys[0]);
+                        return { text: 'Which one came first? ⏳', ok, isOk: it => it.id === ok.id, options: opts, factFn: it => `${opts.map(o => `${o.name}: ${o.year}`).join(' · ')}` };
+                    }
+                }
+                return null;
+            } }
+        ];
+        let quizQ = null, quizAnswered = 0, quizMistakes = 0, quizLocked = false;
+        function makeQuizQuestion() {
+            const bag = QUIZ_TYPES.flatMap(t => Array(t.weight).fill(t));
+            for (let tries = 0; tries < 30; tries++) {
+                const q = pick(bag).make(); if (!q) continue;
+                if (q.options) return { ...q, options: shuffle(q.options) };
+                const ok = q.ok || pick(items.filter(q.isOk));
+                const wrongPool = items.filter(it => it.id !== ok.id && !q.isOk(it) && (!q.isWrong || q.isWrong(it)));
+                if (wrongPool.length < 2) continue;
+                return { ...q, ok, options: shuffle([ok, ...shuffle(wrongPool).slice(0, 2)]) };
+            }
+        }
+        function initQuiz() { quizAnswered = 0; quizMistakes = 0; loadQuizQ(); }
+        function loadQuizQ() {
+            quizQ = makeQuizQuestion();
+            quizLocked = false;
+            document.getElementById('question-text').innerText = quizQ.text;
+            document.getElementById('quiz-fact').innerText = '';
+            document.getElementById('quiz-progress').innerText = '⭐'.repeat(quizAnswered) + '⚪'.repeat(QUIZ_ROUND - quizAnswered);
+            const grid = document.getElementById('quiz-answers'); grid.innerHTML = '';
+            quizQ.options.forEach(it => {
+                const card = document.createElement('div'); card.className = 'answer-card';
+                card.innerHTML = `${itemImg(it)}<div class="card-label">${escapeHtml(it.name)}</div>`;
+                card.onclick = () => checkQuizAnswer(card, it);
+                grid.appendChild(card);
+            });
+        }
+        document.getElementById('quiz-speak').onclick = () => speak(quizQ.text + ' ' + quizQ.options.map(it => it.name).join(', or '));
+        function checkQuizAnswer(cardEl, it) {
+            if (quizLocked || cardEl.classList.contains('wrong')) return;
+            if (it.id === quizQ.ok.id) {
+                quizLocked = true; cardEl.classList.add('correct'); playSound('correct');
+                document.getElementById('quiz-fact').innerText = quizQ.factFn ? `✅ ${quizQ.factFn(it)}` : `✅ ${it.name}: ${it.desc}`;
+                quizAnswered++;
+                document.getElementById('quiz-progress').innerText = '⭐'.repeat(quizAnswered) + '⚪'.repeat(QUIZ_ROUND - quizAnswered);
+                setTimeout(() => {
+                    if (currentScreen !== 'quiz') return;
+                    if (quizAnswered < QUIZ_ROUND) loadQuizQ();
+                    else { celebrate(200); playSound('win'); showWinOverlay('⭐ SPACE GENIUS! ⭐', quizMistakes ? `You answered all ${QUIZ_ROUND} questions!` : `All ${QUIZ_ROUND} right first time. Amazing!`, initQuiz); }
+                }, 2600);
+            } else {
+                quizMistakes++; cardEl.classList.add('wrong', 'shake'); playSound('wrong');
+                setTimeout(() => cardEl.classList.remove('shake'), 500);
+            }
+        }
+
+        // =====================================================================
+        //  WHO AM I?
+        // =====================================================================
+        let guessTarget = null, guessClueIndex = 0, guessesLeft = 5, guessRecent = [];
+        function initGuessGame() {
+            guessClueIndex = 0; guessesLeft = 5; updateGuessDisplay();
+            guessTarget = pick(items.filter(it => !guessRecent.includes(it.id)));
+            guessRecent = [...guessRecent, guessTarget.id].slice(-40);
+            const options = shuffle([guessTarget, ...shuffle(items.filter(it => it.id !== guessTarget.id)).slice(0, 5)]);
+            renderGuessClues();
+            const grid = document.getElementById('guess-answers'); grid.innerHTML = '';
+            options.forEach(it => {
+                const card = document.createElement('div'); card.className = 'answer-card';
+                card.innerHTML = `${itemImg(it)}<div class="card-label">${escapeHtml(it.name)}</div>`;
+                card.onclick = () => handleGuess(card, it.id);
+                grid.appendChild(card);
+            });
+            setTimeout(() => { if (currentScreen === 'guess') readGuessClue(); }, 500);
+        }
+        function updateGuessDisplay() { document.getElementById('guesses-display').innerText = 'Guesses: ' + '🚀'.repeat(Math.max(0, guessesLeft)) + '⚪'.repeat(5 - Math.max(0, guessesLeft)); }
+        function renderGuessClues() {
+            document.getElementById('clue-list').innerHTML = guessTarget.clues.map((clue, i) =>
+                `<li class="clue-item ${i > guessClueIndex ? 'locked' : ''}" data-n="${i + 1}">${i > guessClueIndex ? '' : escapeHtml(clue)}</li>`).join('');
+        }
+        function readGuessClue() { speak(guessTarget.clues[guessClueIndex]); }
+        document.getElementById('guess-speak').onclick = readGuessClue;
+        function handleGuess(cardEl, id) {
+            if (cardEl.classList.contains('wrong') || guessesLeft <= 0) return;
+            stopSpeaking();
+            if (id === guessTarget.id) {
+                guessesLeft = -1; cardEl.classList.add('correct');
+                playSound('win'); celebrate(200);
+                setTimeout(() => showWinOverlay('⭐ SPACE DETECTIVE! ⭐', `It was ${guessTarget.name}!\n${guessTarget.desc}`, initGuessGame, imageUrlFor(guessTarget), 'Next Mystery'), 500);
+            } else {
+                playSound('wrong'); cardEl.classList.add('wrong', 'shake');
+                setTimeout(() => cardEl.classList.remove('shake'), 500);
+                guessesLeft--; updateGuessDisplay();
+                if (guessesLeft > 0) { guessClueIndex = Math.min(guessClueIndex + 1, guessTarget.clues.length - 1); renderGuessClues(); readGuessClue(); }
+                else showWinOverlay('GAME OVER!', `The answer was ${guessTarget.name}!\n${guessTarget.desc}`, initGuessGame, imageUrlFor(guessTarget), 'Try Another');
+            }
+        }
+
+        // =====================================================================
+        //  CREDITS
+        // =====================================================================
+        function renderCredits() {
+            const n = Object.keys(CREDITS).length;
+            document.getElementById('credits-intro').innerHTML = `
+                <p>Space Race uses <b>${n} real pictures</b>, all free to share from <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>.
+                Many are by <b>NASA</b>, <b>ESA</b> and other space agencies, and some are by photographers and artists who share their work under Creative Commons licences.
+                Pictures were resized and cropped to fit the cards. Thank you to everyone who made them!</p>
+                <p>This app is a family learning project. It is not made by, or connected to, NASA, ESA or any other space agency.
+                Fonts: Luckiest Guy and Baloo 2 (Google Fonts). Confetti: canvas-confetti. Space facts were checked in October 2026.</p>`;
+            document.getElementById('credit-list').innerHTML = sortedItems.filter(it => CREDITS[it.id]).map(it => {
+                const c = CREDITS[it.id];
+                return `<div class="credit-row"><img src="space-images/${it.id}.webp" alt="" loading="lazy"><div><b>${escapeHtml(it.name)}</b><br>
+                    ${escapeHtml(c.author)} · ${escapeHtml(c.license)}<br><a href="${escapeHtml(c.url)}" target="_blank" rel="noopener">${escapeHtml(c.file)}</a></div></div>`;
+            }).join('');
+        }
+
+        // =====================================================================
+        //  KEYBOARD
+        // =====================================================================
+        window.addEventListener('keydown', e => {
+            const keyDir = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3, w: 0, d: 1, s: 2, a: 3 }[e.key];
+            if (currentScreen === 'maze' && keyDir !== undefined) { e.preventDefault(); if (M) { M.player.run = null; mazeTry(keyDir); } }
+            if (currentScreen === 'dash') {
+                if (keyDir === 3) { e.preventDefault(); dashMove(-1); }
+                if (keyDir === 1) { e.preventDefault(); dashMove(1); }
+                if (keyDir === 0 || e.key === ' ') { e.preventDefault(); if (D && !D.running && !D.over) dashStart(); else dashJump(); }
+            }
+        });
+
+        // =====================================================================
+        //  BACKGROUND TEXTURE (stars, ringed planets, rockets and orbits)
+        // =====================================================================
+        (function paintBackground() {
+            const star = (x, y, r) => `<path transform="translate(${x} ${y})" d="M0 -${r} L${r * .3} -${r * .3} L${r} 0 L${r * .3} ${r * .3} L0 ${r} L-${r * .3} ${r * .3} L-${r} 0 L-${r * .3} -${r * .3} Z"/>`;
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+                <g fill="#ffffff" fill-opacity=".55">${star(40, 50, 6)}${star(230, 30, 4)}${star(180, 210, 5)}${star(70, 260, 3.5)}
+                    <circle cx="120" cy="90" r="1.4"/><circle cx="270" cy="140" r="1.2"/><circle cx="20" cy="170" r="1.6"/><circle cx="150" cy="280" r="1.1"/><circle cx="260" cy="270" r="1.5"/><circle cx="100" cy="190" r="1"/></g>
+                <g fill="none" stroke="#B39DDB" stroke-opacity=".22" stroke-width="2"><ellipse cx="220" cy="110" rx="34" ry="11" transform="rotate(-18 220 110)"/></g>
+                <circle cx="220" cy="110" r="14" fill="#B39DDB" fill-opacity=".2"/>
+                <g fill="#FF7A1A" fill-opacity=".2" transform="translate(70 130) rotate(35)"><path d="M0 -18 C8 -10 7 6 6 14 H-6 C-7 6 -8 -10 0 -18 Z"/><path d="M-6 6 L-12 16 L-6 14 Z M6 6 L12 16 L6 14 Z"/></g>
+                <g fill="none" stroke="#ffffff" stroke-opacity=".12" stroke-width="1.5" stroke-dasharray="4 6"><ellipse cx="150" cy="150" rx="140" ry="40" transform="rotate(12 150 150)"/></g>
+            </svg>`;
+            document.body.style.setProperty('--pattern', `url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
+        })();
+
+        buildSolar(); renderCalcs();
+    </script>
+</body>
+</html>
