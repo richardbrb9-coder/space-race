@@ -1,4 +1,4 @@
-const CACHE_NAME = 'space-race-cache-v2'; // Bump this when you change the app so tablets pick up the new version
+const CACHE_NAME = 'space-race-cache-v3'; // Bump this when you change the app so tablets pick up the new version
 
 // The space list and picture credits, so every picture can be saved for offline use when the app is installed.
 importScripts('space.js', 'credits.js');
