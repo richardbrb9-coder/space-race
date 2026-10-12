@@ -2,7 +2,7 @@
   "name": "Space Race",
   "short_name": "Space Race",
   "description": "A fun, educational app about space and the Space Race, for kids.",
-  "id": "./",
+  "id": "/space-race/",
   "start_url": "./index.html",
   "scope": "./",
   "display": "fullscreen",
